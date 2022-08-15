@@ -7,64 +7,58 @@ require.config({  //add configurations; in this case, specifying the link to d3 
 requirejs(['d3.layout.cloud', 'd3'], function(app, d3) //requires d3.layout.cloud.js and d3 (defined above)
 {
 
-  //this sample method taken from Mike Bostock, https://observablehq.com/@d3/word-cloud
-  function WordCloud(text, {
-    size = group => group.length, // Given a grouping of words, returns the size factor for that word
-    word = d => d, // Given an item of the data array, returns the word
-    marginTop = 0, // top margin, in pixels
-    marginRight = 0, // right margin, in pixels
-    marginBottom = 0, // bottom margin, in pixels
-    marginLeft = 0, // left margin, in pixels
-    width = 640, // outer width, in pixels
-    height = 400, // outer height, in pixels
-    maxWords = 250, // maximum number of words to extract from the text
-    fontFamily = "sans-serif", // font family
-    fontScale = 15, // base font size
-    padding = 0, // amount of padding between the words (in pixels)
-    rotate = 0, // a constant or function to rotate the words
-    invalidation // when this promise resolves, stop the simulation
-  } = {}) {
-    const words = typeof text === "string" ? text.split(/\W+/g) : Array.from(text);
-    
-    const data = d3.rollups(words, size, w => w)
-      .sort(([, a], [, b]) => d3.descending(a, b))
-      .slice(0, maxWords)
-      .map(([key, size]) => ({text: word(key), size}));
-    
-    const svg = d3.create("svg")
-        .attr("viewBox", [0, 0, width, height])
-        .attr("width", width)
-        .attr("font-family", fontFamily)
-        .attr("text-anchor", "middle")
-        .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
-  
-    const g = svg.append("g").attr("transform", `translate(${marginLeft},${marginTop})`);
-  
-    const cloud = app()
-        .size([width - marginLeft - marginRight, height - marginTop - marginBottom])
-        .words(data)
-        .padding(padding)
-        .rotate(rotate)
-        .font(fontFamily)
-        .fontSize(d => Math.sqrt(d.size) * fontScale)
-        .on("word", ({size, x, y, rotate, text}) => {
-          console.log(size);
-          console.log(rotate);
-          console.log(text);
-          g.append("text")
-              .attr("font-size", size)
-              .attr("transform", `translate(${x},${y}) rotate(${rotate})`)
-              .text(text);
-        });
-  
-    cloud.start();
-    invalidation && invalidation.then(() => cloud.stop());
-    return svg.node();
+  let dim = 600;
+
+  let words = [ //descending order by size
+    {text: "data", size: 15},
+    {text: "frequency", size: 12},
+    {text: "words", size: 10},
+    {text: "spiral", size: 8},
+    {text: "clouds", size: 7},
+    {text: "padding", size: 7},
+    {text: "margin", size: 6},
+    {text: "font-size", size: 3}
+  ];
+
+  function scaleSize(d)
+  {
+    return Math.sqrt(d)*15;
   }
 
-  //run Bostock's method on sample text and display it in div1
-  let text = "hello world this is a text and some words in the text appear multiple times and some words in the text appear one time";
-  let cloud = WordCloud(text);
-  
-  document.getElementById("div1").append(cloud);
+  colorScale = d3.scaleLinear()
+    .domain([1, d3.max(words, d => scaleSize(d.size))])
+    .range(['#e6e6ff', '#0000cc'])
+    .interpolate(d3.interpolateLab);
+
+  let svg = d3.create("svg")
+    .attr("width", dim)
+    .attr("height", dim);
+
+  let cloud = app()
+    .words(words)
+    .size([dim, dim])
+    .font("sans-serif")
+    .rotate(0)
+    .fontSize(d => scaleSize(d.size))
+    .padding(10)
+    .on("end", function() //when cloud generation is finished, create text in svg element
+    {
+      svg.selectAll("text")
+        .data(words)
+        .join("text")
+        .attr("font-size", d => d.size)
+        .attr("font-family", d => d.font)
+        .attr("text-anchor", "middle") //important
+        .attr("fill", d => colorScale(d.size))
+        .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+        .attr("y", d => d.y+dim/2)
+        .text(d => d.text);
+    });
+
+  cloud.start();
+
+  console.log(svg.node());
+
+  document.getElementById("div1").append(svg.node());
+
 });
