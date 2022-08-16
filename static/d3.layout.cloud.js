@@ -400,7 +400,7 @@
       rectangular: rectangularSpiral
     };
     
-    },{"d3-dispatch":2}],2:[function(require,module,exports){ //come back to this
+    },{"d3-dispatch":2}],2:[function(require,module,exports){
     // https://d3js.org/d3-dispatch/ Version 1.0.3. Copyright 2017 Mike Bostock.
     (function (global, factory) {
         typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -410,7 +410,7 @@
     
     var noop = {value: function() {}}; //object with only value, an empty function, as a variable
     
-    function dispatch() { //come back
+    function dispatch() {
       for (var i = 0, n = arguments.length, _ = {}, t; i < n; ++i) {
         if (!(t = arguments[i] + "") || (t in _)) throw new Error("illegal type: " + t);
         _[t] = [];
