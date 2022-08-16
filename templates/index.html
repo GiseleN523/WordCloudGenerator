@@ -3,18 +3,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div id="wordCloudPreview"></div>
-    <input id ="fileInput" type="file" accept=".txt"><br><br>
-    <form>
-        <span><label for="paddingPref">Padding Between Words</label><input type="text" id="paddingPref" value="3"></span><br>
-        <span><label for="numWordsPref">Maximum Number of Words to Include</label><input type="text" id="numWordsPref" value="100"></span><br>
-        <span><label for="minCountPref">Only Include Words With Word Counts Above</label><input type="text" id="minCountPref" value="1"></span><br>
-        <span><label for="stopWordwPref">Don't Include Stop Words</label><input type="checkbox" value="stopwordw" id="stopWordsPref"></span>
-        <span><label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label><input type="checkbox" value="lightness" id="lightnessPref"></span><br>
-        <span><label for="semanticPref">Split Words into Semantic Groups</label><input type="checkbox" value="semantic" id="semanticPref"></span><br>
-        <span><label for="semanticColorPref">Use Color To Encode Semantic Categories</label><input type="checkbox" value="semanticColor" id="semanticColorPref"></span><br>
-        <span><label for="rectBoundingPref">Generate Rectangular Bounding Boxes Around Words</label><input type="checkbox" value="rectBounding" id="rectBoundingPref"></span><br><br>
-    </form>
-        <button id="generateButton" type="button">Generate!</button>
+    <div id="leftContentColumn">
+        <div id="wordCloudPreview"></div>
+        <input id ="fileInput" type="file" accept=".txt"><br>
+        <textarea id="rawTextInput" placeholder="Your text here"></textarea>
+    </div>
+    <div id="rightContentColumn">
+        <h3>Preferences</h3>
+        <form>
+            <div><label for="paddingPref">Padding Between Words</label><input type="text" id="paddingPref" value="3"></div>
+            <div><label for="numWordsPref">Maximum Number of Words to Include</label><input type="text" id="numWordsPref" value="100"></div>
+            <div><label for="minCountPref">Only Include Words With Word Counts Above</label><input type="text" id="minCountPref" value="1"></div>
+            <div><label for="stopWordwPref">Don't Include Stop Words</label><input type="checkbox" value="stopwordwords" id="stopWordsPref"></div>
+            <div><label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label><input type="checkbox" value="lightness" id="lightnessPref"></div>
+            <div><label for="semanticPref">Split Words into Semantic Groups</label><input type="checkbox" value="semantic" id="semanticPref"></div>
+            <div><label for="semanticColorPref">Use Color To Encode Semantic Categories</label><input type="checkbox" value="semanticColor" id="semanticColorPref"></div>
+            <div><label for="rectBoundingPref">Generate Rectangular Bounding Boxes Around Words</label><input type="checkbox" value="rectBounding" id="rectBoundingPref"></div>
+            <div><label></label><button id="generateButton" type="button">Generate!</button></div>
+        </form>
+    </div>
     <script data-main = "../static/launcher" src="../static/require.js"></script>
 </body>

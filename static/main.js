@@ -1,20 +1,7 @@
 define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 {
 
-  let dim = 700;
-
-  let numWords = 100;
-
-  /*let words = [ //descending order by size
-    {text: "data", frequency: 15},
-    {text: "frequency", frequency: 12},
-    {text: "words", frequency: 10},
-    {text: "spiral", frequency: 8},
-    {text: "clouds", frequency: 7},
-    {text: "padding", frequency: 7},
-    {text: "margin", frequency: 6},
-    {text: "font-size", frequency: 3}
-  ];*/
+  let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
   document.getElementById('generateButton').onclick = () => 
   {
@@ -31,16 +18,30 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
     console.log(userPrefs);
 
-    let file = fileInput.files[0];
-    let reader = new FileReader();
-    reader.readAsText(file);
-    reader.addEventListener("load", () => 
+    let fileInput = document.getElementById("fileInput");
+    let textInput = document.getElementById("rawTextInput");
+    let text;
+
+    if(fileInput.files.length>0)
     {
-      let words = parseText(reader.result, userPrefs);
+      console.log(fileInput);
+
+      let file = fileInput.files[0];
+      let reader = new FileReader();
+      reader.readAsText(file);
+      reader.addEventListener("load", () => 
+      {
+        let words = parseText(reader.result, userPrefs);
+        console.log(words);
+        document.getElementById("wordCloudPreview").append(createCloud(words, userPrefs));
+      });
+    }
+    else if(textInput.value.length>0)
+    {
+      let words = parseText(textInput.value, userPrefs);
       console.log(words);
-      let cloud = createCloud(words, userPrefs);
-      document.getElementById("wordCloudPreview").append(cloud);
-    });
+      document.getElementById("wordCloudPreview").append(createCloud(words, userPrefs));
+    }
   }
 
   function parseText(textStr, userPrefs) {
@@ -64,7 +65,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       }
     });
     wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
-    if(wordsFreq.length>numWords)
+    if(wordsFreq.length>userPrefs.numWords)
     {
       return wordsFreq.splice(0, userPrefs.numWords);
     }
