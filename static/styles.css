@@ -1,4 +1,66 @@
 body
 {
     font-family: sans-serif;
+    margin-top: 3%;
+}
+
+form div
+{
+    margin: 20px;
+    
+}
+
+form div label, #rightContentColumn h3
+{
+    display: inline-block;
+    text-align: right;
+    width: 25%;
+    padding-right: 5px;
+}
+
+form button
+{
+    background-color: white;
+    color: black;
+    padding: .5em;
+    border-radius: 6px;
+    font-size: 110%;
+}
+
+form button:hover
+{
+    background-color: #dddddd;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+form div input
+{
+    text-align: left;
+}
+
+#leftContentColumn
+{
+    width: 700px;
+    float: left;
+    margin: 0px 20px;
+}
+
+#wordCloudPreview
+{
+    width: 700px;
+    height: 700px;
+    border: 2px solid black;
+    border-radius: 5px;
+}
+
+#fileInput
+{
+    margin-top: 20px;
+}
+
+#rawTextInput
+{
+    margin-top: 20px;
+    width: 700px;
 }

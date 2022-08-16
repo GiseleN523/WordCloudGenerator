@@ -33,7 +33,7 @@
     
       cloud.start = function() {
         var contextAndRatio = getContext(canvas()),
-            board = zeroArray((size[0] >> 5) * size[1]), //creates array of n zeros; n is the first item in the size array, shifted to the right 5 digits of its binary version, then multiplied by the second item in size (256 -> 1024)
+            board = zeroArray((size[0] >> 5) * size[1]), //creates array of n zeros to represent the board. On the width dimension, every 32 1-bit pixels is represented by a 32 bit integer.
             bounds = null,
             n = words.length,
             i = -1,
@@ -57,9 +57,9 @@
     
         function step() {
           var start = Date.now();
-          while (Date.now() - start < timeInterval && ++i < n && timer) { //while time elapsed is less than timeInterval (provided timer exists) //what is i??
+          while (Date.now() - start < timeInterval && ++i < n && timer) { //while time elapsed is less than timeInterval (provided timer exists). i is the index of word to be placed
             var d = data[i];
-            d.x = (size[0] * (random() + .5)) >> 1; //set x to (cloud/canvas width * a random number between .5 and 1.4999999), which is then shifted 1 bit to the right (why?)
+            d.x = (size[0] * (random() + .5)) >> 1; //set x to a position around the center of the canvas. 
             d.y = (size[1] * (random() + .5)) >> 1; //same for y
             cloudSprite(contextAndRatio, d, data, i); 
             if (d.hasText && place(board, d, bounds)) { //if there is text associated with the tag and it is then successfully placed:
@@ -105,18 +105,18 @@
             startX = tag.x,
             startY = tag.y,
             maxDelta = Math.sqrt(size[0] * size[0] + size[1] * size[1]), //pythagorean theorem; maxDelta is hypotenuse length between size[0] and size[1] (width and length dimensions)
-            s = spiral(size),
+            s = spiral(size),  // desired spiral type
             dt = random() < .5 ? 1 : -1, //randomly set to 1 or -1 
             t = -dt,
             dxdy,
             dx,
             dy;
     
-        while (dxdy = s(t += dt)) { //s defined in the top line; not sure what it does
+        while (dxdy = s(t += dt)) { 
           dx = ~~dxdy[0]; //floor items
           dy = ~~dxdy[1];
     
-          if (Math.min(Math.abs(dx), Math.abs(dy)) >= maxDelta) break; //break if dx and dy are bigger than length of cloud diagonal/hypotenuse
+          if (Math.min(Math.abs(dx), Math.abs(dy)) >= maxDelta) break; //break if dx or dy are bigger than length of cloud diagonal/hypotenuse
     
           tag.x = startX + dx;
           tag.y = startY + dy;
@@ -126,9 +126,9 @@
           // TODO only check for collisions within current bounds.
           if (!bounds || !cloudCollide(tag, board, size[0])) { //if no collision
             if (!bounds || collideRects(tag, bounds)) {
-              var sprite = tag.sprite, //I don't really know what's going on with all of these, and with all the shifting of bits
-                  w = tag.width >> 5, //I wonder if maybe the bit shifting has something to do with Davies' solution he described where he sped things up by saving multiple pieces of data in one integer;
-                  sw = size[0] >> 5, //maybe this is how you access them after/decompress them
+              var sprite = tag.sprite, //get the sprite results, not sure what exactly it is 
+                  w = tag.width >> 5, //compress width of the tag
+                  sw = size[0] >> 5, //compress the coordinates of the board
                   lx = tag.x - (w << 4),
                   sx = lx & 0x7f,
                   msx = 32 - sx,
@@ -138,7 +138,7 @@
               for (var j = 0; j < h; j++) { //nested loops: iterate through every pixel in the tag
                 last = 0;
                 for (var i = 0; i <= w; i++) {
-                  board[x + i] |= (last << msx) | (i < w ? (last = sprite[j * w + i]) >>> sx : 0); //? not too sure about this line; maybe sets up values in board?
+                  board[x + i] |= (last << msx) | (i < w ? (last = sprite[j * w + i]) >>> sx : 0); // update the board status through binary OR operation
                 }
                 x += sw;
               }
@@ -258,16 +258,16 @@
               hsr = h * sr;
           w = (Math.max(Math.abs(wcr + hsr), Math.abs(wcr - hsr)) + 0x1f) >> 5 << 5;
           h = ~~Math.max(Math.abs(wsr + hcr), Math.abs(wsr - hcr));
-        } else { //not sure what this is doing
-          w = (w + 0x1f) >> 5 << 5; //this seems to set the right 5 digits of (whatever the result is) to zeros
+        } else {
+          w = (w + 0x1f) >> 5 << 5; //rounding up the width to the nearest power of 2. if less than 32, round up to 32.
         }
-        if (h > maxh) maxh = h; //keep track of height of tallest word so far (why?)
-        if (x + w >= (cw << 5)) { //?
-          x = 0;
-          y += maxh;
-          maxh = 0;
+        if (h > maxh) maxh = h; //keep track of height of tallest word so far 
+        if (x + w >= (cw << 5)) { // out of the boundary horizontally
+          x = 0;    //start a new line
+          y += maxh;   // the new line must be at least maxh from the line before.
+          maxh = 0;   // reset the largest height
         }
-        if (y + h >= ch) break;
+        if (y + h >= ch) break;   // if y also out of bound, placement stops
         c.translate((x + (w >> 1)) / ratio, (y + (h >> 1)) / ratio);
         if (d.rotate) c.rotate(d.rotate * cloudRadians);
         c.fillText(d.text, 0, 0);
@@ -277,18 +277,18 @@
         d.height = h;
         d.xoff = x;
         d.yoff = y;
-        d.x1 = w >> 1;
-        d.y1 = h >> 1;
-        d.x0 = -d.x1;
-        d.y0 = -d.y1;
+        d.x1 = w >> 1;    //boundary of the text, right 
+        d.y1 = h >> 1;   //boundary of the text, down
+        d.x0 = -d.x1;  //boundary of the text, left
+        d.y0 = -d.y1;   ////boundary of the text, up 
         d.hasText = true;
-        x += w;
+        x += w;   // add x location for next placement
       }
       var pixels = c.getImageData(0, 0, (cw << 5) / ratio, ch / ratio).data, //getImageData(): https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/getImageData (0, 0, 100000000000 / ratio, 100000000000 / ratio)?
           sprite = []; //^returns this portion of the pixel data (RGBA colors) in contextAndRatio.context parameter
       while (--di >= 0) { //iterate through words
         d = data[di];
-        if (!d.hasText) continue;
+        if (!d.hasText) continue; 
         var w = d.width,
             w32 = w >> 5,
             h = d.y1 - d.y0;
