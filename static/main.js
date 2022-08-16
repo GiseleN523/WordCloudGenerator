@@ -44,25 +44,29 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   }
 
   function parseText(textStr, userPrefs) {
-    let words = textStr.split('\n').join(' ').split('\n').join(' ').split(' ');
-    console.log(words);
-    let wordsFreq = [];
-    words.forEach(function(c) {
-      let found = false;
+    let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
+    let cleanWords = words.map(word => word.replace(/[“”."!,]/g, ""))
+    let wordsDict = {}
+    cleanWords.forEach(function(c) {
       if(c.length > 0)
       {
-        wordsFreq.forEach(function(b){
-          if(c == b.text) {
-            b.frequency++;
-            found = true;
-          }
-        });
-        if(found === false) {
-          newWord = {text: c, frequency: 1};
-          wordsFreq.push(newWord);
+        if(c in wordsDict) {
+          wordsDict[c]++
+        }
+        else {
+          wordsDict[c] = 1
         }
       }
-    });
+    })
+    let textArr = Object.keys(wordsDict)
+    let freqArr = Object.values(wordsDict)
+    console.log(textArr)
+    let wordsFreq = []
+    for(let i = 0; i < Object.keys(wordsDict).length; i++){
+      let thisWord = {text: textArr[i], frequency: freqArr[i]}
+      wordsFreq.push(thisWord)
+    }
+
     wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
     if(wordsFreq.length>numWords)
     {
@@ -118,4 +122,5 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     console.log(svg.node());
     return svg.node();
   }
-});
+})
+
