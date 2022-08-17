@@ -12,15 +12,20 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       stopWord: document.getElementById('stopWordsPref').checked,
       lightness: document.getElementById('lightnessPref').checked,
       semantic: document.getElementById('semanticPref').checked,
-      semanticColor: document.getElementById('semanticColorPref').checked,
-      rectBounding: document.getElementById('rectBoundingPref').checked
+      color: Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value), //convert to array (because it's actually a nodelist) and create array of hex color values
+      rectBounding: document.getElementById('rectBoundingPref').checked,
+      circleBounding: document.getElementById('circleBoundingPref').checked
     }
 
     console.log(userPrefs);
 
     let fileInput = document.getElementById("fileInput");
     let textInput = document.getElementById("rawTextInput");
-    let text;
+
+    document.getElementById("wordCloudPreview").childNodes.forEach(function(d) //clear wordCloudPreview box
+    {
+      document.getElementById("wordCloudPreview").removeChild(d);
+    });
 
     if(fileInput.files.length>0)
     {
@@ -85,10 +90,28 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         .domain([0, d3.max(words, d => d.frequency)])
         .range([0, 80])
 
-    let colorScale = d3.scaleLinear()
+    let labColorLight = userPrefs.color.map(function(d)
+    {
+      let col = d3.lab(d);
+      col.l = 90;
+      return col;
+    });
+
+    let labColorDark = userPrefs.color.map(function(d)
+    {
+      let col = d3.lab(d);
+      col.l = 50;
+      return col;
+    });
+    
+    let colorScale1 = d3.scaleLinear()
       .domain([1, d3.max(words, d => d.frequency)])
-      .range(['#e6e6ff', '#0000cc'])
+      .range([labColorLight[0], labColorDark[0]])
       .interpolate(d3.interpolateLab);
+
+    console.log(colorScale1(10))
+    console.log(colorScale1(1))
+    console.log(colorScale1(4))
 
     let cloud = d3cloud()
       .words(words)
@@ -105,7 +128,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("fill", d => colorScale(d.frequency))
+          .attr("fill", d => colorScale1(d.frequency))
           .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
           .attr("y", d => d.y+dim/2)
           .text(d => d.text);

@@ -9,7 +9,7 @@
         cw = 1 << 11 >> 5, //cw = 1000000? Xingyi: used to represent each spot in the cloud canvas and, in binary, whether it is filled or not
         ch = 1 << 11; // ch = 100000000000?
     
-    module.exports = function() { //this is what gets called when someone require()s the file (node.js)
+    module.exports = function() { //this is what gets calleda when someone require()s the file (node.js)
       var size = [256, 256],
           text = cloudText, //the values these variables are being set to are all methods that are defined later, outside of this function
           font = cloudFont,
