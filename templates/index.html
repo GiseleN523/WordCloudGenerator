@@ -24,8 +24,16 @@
                 <input type="text" id="minCountPref" value="1">
             </div>
             <div>
+                <label for="fontSizePref">Font Size</label>
+                <input type="range" min="30" max="150" id="fontSizePref">
+            </div>
+            <div>
                 <label for="stopWordwPref">Don't Include Stop Words</label>
                 <input type="checkbox" value="stopwordwords" id="stopWordsPref" checked>
+            </div>
+            <div id="stopWordsBoxPrefDiv">
+                <label></label>
+                <textarea id="stopWordsBoxPref"></textarea>
             </div>
             <div>
                 <label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label>
