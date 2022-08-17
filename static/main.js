@@ -74,6 +74,9 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     }
 
     wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
+
+    //
+
     if(wordsFreq.length>userPrefs.numWords)
     {
       return wordsFreq.splice(0, userPrefs.numWords);
