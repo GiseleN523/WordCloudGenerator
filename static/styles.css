@@ -43,7 +43,7 @@ form div input
 {
     width: 700px;
     float: left;
-    margin: 0px 20px;
+    margin: 0px 20px 20% 20px;
 }
 
 #wordCloudPreview
@@ -63,4 +63,19 @@ form div input
 {
     margin-top: 20px;
     width: 700px;
+}
+
+#extraWords
+{
+    display: none;
+    margin-top: 10px;
+}
+
+#extraWordsList
+{
+    padding-left: 50px;
+    margin: 10px;
+    overflow: scroll;
+    height: 200px;
+    width: auto;
 }
