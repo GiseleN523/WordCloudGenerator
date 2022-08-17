@@ -24,7 +24,7 @@
                 <input type="text" id="minCountPref" value="1">
             </div>
             <div>
-                <label for="fontSizePref">Font Size</label>
+                <label for="fontSizePref">Largest Font Size</label>
                 <input type="range" min="30" max="150" id="fontSizePref">
             </div>
             <div>
@@ -60,6 +60,15 @@
                 <button id="generateButton" type="button">Generate!</button>
             </div>
         </form>
+        <div id="extraWords">
+            Here are the top words that didn't make it into your cloud:
+            <ol id='extraWordsList'></ol>
+            Possible reasons these words weren't included:<br>
+            Their word count was too small<br>
+            Your cloud already had the requested number of words<br>
+            Adding these words would have caused your cloud to have some words with this count that were included and some that weren't<br>
+            They were too large to fit in the cloud width with the current settings
+        </div>
     </div>
     <script data-main = "../static/launcher" src="../static/require.js"></script>
 </body>

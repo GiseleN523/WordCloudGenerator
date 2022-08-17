@@ -33,25 +33,27 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       document.getElementById("wordCloudPreview").removeChild(d);
     });
 
-    if(fileInput.files.length>0)
+    if(fileInput.files.length>0 || textInput.value.length>0)
     {
-      console.log(fileInput);
-
-      let file = fileInput.files[0];
-      let reader = new FileReader();
-      reader.readAsText(file);
-      reader.addEventListener("load", () => 
+      let allWords;
+      if(fileInput.files.length>0)
       {
-        let words = parseText(reader.result, userPrefs);
-        console.log(words);
-        document.getElementById("wordCloudPreview").append(createCloud(words, userPrefs));
-      });
-    }
-    else if(textInput.value.length>0)
-    {
-      let words = parseText(textInput.value, userPrefs);
-      console.log(words);
-      document.getElementById("wordCloudPreview").append(createCloud(words, userPrefs));
+        console.log(fileInput);
+
+        let file = fileInput.files[0];
+        let reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = function()
+        {
+          allWords = parseText(reader.result, userPrefs);
+          addCloudToHTML(allWords, userPrefs);
+        };
+      }
+      else
+      {
+        allWords = parseText(textInput.value, userPrefs);
+        addCloudToHTML(allWords, userPrefs);
+      }
     }
   }
 
@@ -60,12 +62,12 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     let source = document.getElementById("stopWordsPref");
     if(source.checked)
     {
-      document.getElementById("stopWordsBoxPrefDiv").style = "display: block";
+      document.getElementById("stopWordsBoxPrefDiv").style.display = "block";
       document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
     }
     else
     {
-      document.getElementById("stopWordsBoxPrefDiv").style = "display: none;";
+      document.getElementById("stopWordsBoxPrefDiv").style.display = "none;";
     }
   };
 
@@ -103,13 +105,31 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
     //
 
-    if(wordsFreq.length>userPrefs.numWords)
-    {
-      return wordsFreq.splice(0, userPrefs.numWords);
+    return wordsFreq;
+  }
+
+  function addCloudToHTML(allWords, userPrefs) //is there a better name for this? It's just sort of random things I had to separate because of the file loading event
+  {
+    let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
+    while(newWords.length>0 && allWords.length0 && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)
+    { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list
+      newWords.pop();
     }
-    else
+
+    let cloud = createCloud(newWords, userPrefs);
+    document.getElementById("wordCloudPreview").append(cloud);
+
+    let extraWords1 = Array.from(cloud.childNodes).filter(d => (d['__data__'].x>dim/2 || d['__data__'].x<0-dim/2 || d['__data__'].y>dim/2 || d['__data__'].y<0-dim/2)).map(d => d['__data__']);
+    //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
+
+    document.getElementById("extraWords").style.display = "block";
+    document.getElementById("extraWordsList").innerHTML = "";
+    let extraWords = extraWords1.concat(allWords.filter(d => !newWords.includes(d))); //words that were too big or too small to include
+    let i = 0;
+    while(i<extraWords.length && i<100)
     {
-      return wordsFreq;
+      document.getElementById("extraWordsList").innerHTML+="<li>"+extraWords[i].text+", "+extraWords[i].frequency+" occurences</li>";
+      i++;
     }
   }
 
@@ -123,23 +143,36 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         .domain([0, d3.max(words, d => d.frequency)])
         .range([0, userPrefs.fontSize])
 
-    let labColorLight = userPrefs.color.map(function(d)
-    {
-      let col = d3.lab(d);
-      col.l = 90;
-      return col;
-    });
+    let color1;
+    let color2;
 
-    let labColorDark = userPrefs.color.map(function(d)
+    if(userPrefs.lightness)
     {
-      let col = d3.lab(d);
-      col.l = 50;
-      return col;
-    });
+      let labColorLight = userPrefs.color.map(function(d)
+      {
+        let col = d3.lab(d);
+        col.l = 100;
+        return col;
+      });
+      let labColorDark = userPrefs.color.map(function(d)
+      {
+        let col = d3.lab(d);
+        col.l = 40;
+        return col;
+      });
+
+      color1 = labColorLight[0];
+      color2 = labColorDark[0];
+    }
+    else
+    {
+      color1 = userPrefs.color[0];
+      color2 = userPrefs.color[0];
+    }
     
     let colorScale1 = d3.scaleLinear()
       .domain([1, d3.max(words, d => d.frequency)])
-      .range([labColorLight[0], labColorDark[0]])
+      .range([color1, color2])
       .interpolate(d3.interpolateLab);
 
     let cloud = d3cloud()
