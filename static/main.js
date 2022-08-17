@@ -3,12 +3,18 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
+  let stopWords=["and", "the", "of"];
+
+  document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
+
+
   document.getElementById('generateButton').onclick = () => 
   {
     let userPrefs = {
       padding: document.getElementById('paddingPref').value,
       numWords: document.getElementById('numWordsPref').value,
       minCount: document.getElementById('minCountPref').value,
+      fontSize: document.getElementById('fontSizePref').value,
       stopWord: document.getElementById('stopWordsPref').checked,
       lightness: document.getElementById('lightnessPref').checked,
       semantic: document.getElementById('semanticPref').checked,
@@ -48,6 +54,26 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       document.getElementById("wordCloudPreview").append(createCloud(words, userPrefs));
     }
   }
+
+  document.getElementById("stopWordsPref").onchange = function()
+  {
+    let source = document.getElementById("stopWordsPref");
+    if(source.checked)
+    {
+      document.getElementById("stopWordsBoxPrefDiv").style = "display: block";
+      document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
+    }
+    else
+    {
+      document.getElementById("stopWordsBoxPrefDiv").style = "display: none;";
+    }
+  };
+
+  document.getElementById("stopWordsBoxPref").onchange = function()
+  {
+    stopWords = document.getElementById("stopWordsBoxPref").value.split(" ");
+    console.log(stopWords);
+  };
 
   function parseText(textStr, userPrefs) {
     let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
@@ -95,7 +121,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
     let sizeScale = d3.scaleSqrt()
         .domain([0, d3.max(words, d => d.frequency)])
-        .range([0, 80])
+        .range([0, userPrefs.fontSize])
 
     let labColorLight = userPrefs.color.map(function(d)
     {
@@ -115,10 +141,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .domain([1, d3.max(words, d => d.frequency)])
       .range([labColorLight[0], labColorDark[0]])
       .interpolate(d3.interpolateLab);
-
-    console.log(colorScale1(10))
-    console.log(colorScale1(1))
-    console.log(colorScale1(4))
 
     let cloud = d3cloud()
       .words(words)
