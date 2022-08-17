@@ -128,7 +128,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     let i = 0;
     while(i<extraWords.length && i<100)
     {
-      document.getElementById("extraWordsList").innerHTML+="<li>"+extraWords[i].text+", "+extraWords[i].frequency+" occurences</li>";
+      document.getElementById("extraWordsList").innerHTML+="<li>"+extraWords[i].text+", "+extraWords[i].frequency+" occurrences</li>";
       i++;
     }
   }
@@ -154,6 +154,12 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         col.l = 100;
         return col;
       });
+      let labColorMid = userPrefs.color.map(function(d)
+      {
+        let col = d3.lab(d);
+        col.l = 70;
+        return col;
+      });
       let labColorDark = userPrefs.color.map(function(d)
       {
         let col = d3.lab(d);
@@ -162,17 +168,24 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       });
 
       color1 = labColorLight[0];
-      color2 = labColorDark[0];
+      color2 = labColorMid[0];
+      color3 = labColorDark[0];
     }
     else
     {
       color1 = userPrefs.color[0];
       color2 = userPrefs.color[0];
+      color2 = userPrefs.color[0];
     }
     
     let colorScale1 = d3.scaleLinear()
-      .domain([1, d3.max(words, d => d.frequency)])
+      .domain([1, d3.max(words, d => d.frequency)/2])
       .range([color1, color2])
+      .interpolate(d3.interpolateLab);
+
+    let colorScale2 = d3.scaleLinear()
+      .domain([d3.max(words, d => d.frequency)/2, d3.max(words, d => d.frequency)])
+      .range([color2, color3])
       .interpolate(d3.interpolateLab);
 
     let cloud = d3cloud()
@@ -190,7 +203,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("fill", d => colorScale1(d.frequency))
+          .attr("fill", d => d<colorScale1.domain[1] ? colorScale1(d.frequency) : colorScale2(d.frequency))
           .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
           .attr("y", d => d.y+dim/2)
           .text(d => d.text);
@@ -199,6 +212,11 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     words.forEach(function(d){
       d.fontSize = sizeScale(d.frequency);
     });
+
+    cloud.childNodes.forEach(function(d)
+    {
+      console.log(d.fill)
+    })
 
     cloud.start();
     console.log(svg.node());
