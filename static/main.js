@@ -3,10 +3,11 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
-  let stopWords=["and", "the", "of"];
+  //make file read here maybe or add default to html box
+  text = "i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
+  stopWords = text.split(" ")
 
   document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
-
 
   document.getElementById('generateButton').onclick = () => 
   {
@@ -22,8 +23,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       rectBounding: document.getElementById('rectBoundingPref').checked,
       circleBounding: document.getElementById('circleBoundingPref').checked
     }
-
-    console.log(userPrefs);
 
     let fileInput = document.getElementById("fileInput");
     let textInput = document.getElementById("rawTextInput");
@@ -74,12 +73,11 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   document.getElementById("stopWordsBoxPref").onchange = function()
   {
     stopWords = document.getElementById("stopWordsBoxPref").value.split(" ");
-    console.log(stopWords);
   };
 
   function parseText(textStr, userPrefs) {
     let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
-    let cleanWords = words.map(word => word.replace(/[“”."!,]/g, ""))
+    let cleanWords = words.map(word => word.replace(/[—;:()“”."!?,]/g, "")) //dashes should convert to space not empty str
     let wordsDict = {}
     cleanWords.forEach(function(c) {
       if(c.length > 0)
@@ -102,8 +100,31 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     }
 
     wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
-
-    //
+    console.log(wordsFreq)
+    wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
+    
+    console.log(wordsFreq)
+    wordsFreq.forEach(function(wordObj) {
+      findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase()) 
+      console.log(wordObj.text.toLowerCase())
+      console.log(findMatch)
+      if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
+        if(wordObj.frequency > wordsFreq[findMatch].frequency) {
+          wordObj.frequency += wordsFreq[findMatch].frequency
+          wordsFreq.splice(findMatch, 1)
+        }
+        else if (wordObj.frequency > wordsFreq[findMatch].frequency) {
+          wordsFreq[findMatch].frequency += wordObj.frequency
+          wordsFreq.splice(wordsFreq.indexOf(wordObj), 1)
+        }
+      } 
+    })
+    
+    console.log(wordsFreq)
+    if(wordsFreq.length>userPrefs.numWords)
+    {
+      wordsFreq = wordsFreq.splice(0, userPrefs.numWords);
+    }
 
     return wordsFreq;
   }
@@ -131,6 +152,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       document.getElementById("extraWordsList").innerHTML+="<li>"+extraWords[i].text+", "+extraWords[i].frequency+" occurrences</li>";
       i++;
     }
+    
   }
 
   function createCloud(words, userPrefs)
