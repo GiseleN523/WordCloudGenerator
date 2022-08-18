@@ -44,13 +44,13 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         reader.readAsText(file);
         reader.onload = function()
         {
-          allWords = parseText(reader.result, userPrefs);
+          allWords = parseText(reader.result);
           addCloudToHTML(allWords, userPrefs);
         };
       }
       else
       {
-        allWords = parseText(textInput.value, userPrefs);
+        allWords = parseText(textInput.value);
         addCloudToHTML(allWords, userPrefs);
       }
     }
@@ -75,7 +75,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     stopWords = document.getElementById("stopWordsBoxPref").value.split(" ");
   };
 
-  function parseText(textStr, userPrefs) {
+  function parseText(textStr) {
     let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
     let cleanWords = words.map(word => word.replace(/[—;:()“”."!?,]/g, "")) //dashes should convert to space not empty str
     let wordsDict = {}
@@ -92,22 +92,17 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     })
     let textArr = Object.keys(wordsDict)
     let freqArr = Object.values(wordsDict)
-    console.log(textArr)
     let wordsFreq = []
     for(let i = 0; i < Object.keys(wordsDict).length; i++){
-      let thisWord = {text: textArr[i], frequency: freqArr[i]}
+      let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
       wordsFreq.push(thisWord)
     }
 
     wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
-    console.log(wordsFreq)
     wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
     
-    console.log(wordsFreq)
     wordsFreq.forEach(function(wordObj) {
       findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase()) 
-      console.log(wordObj.text.toLowerCase())
-      console.log(findMatch)
       if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
         if(wordObj.frequency > wordsFreq[findMatch].frequency) {
           wordObj.frequency += wordsFreq[findMatch].frequency
@@ -119,21 +114,14 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         }
       } 
     })
-    
-    console.log(wordsFreq)
-    if(wordsFreq.length>userPrefs.numWords)
-    {
-      wordsFreq = wordsFreq.splice(0, userPrefs.numWords);
-    }
-
     return wordsFreq;
   }
 
   function addCloudToHTML(allWords, userPrefs) //is there a better name for this? It's just sort of random things I had to separate because of the file loading event
   {
     let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
-    while(newWords.length>0 && allWords.length0 && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)
-    { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list
+    while(newWords.length>0 && allWords.length0 && (newWords[newWords.length-1].frequency<userPrefs.minCount || newWords[newWords.length-1].frequency === allWords[newWords.length].frequency))
+    { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minFrequency pref
       newWords.pop();
     }
 
@@ -165,50 +153,16 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         .domain([0, d3.max(words, d => d.frequency)])
         .range([0, userPrefs.fontSize])
 
-    let color1;
-    let color2;
+    let labColor = d3.lab(userPrefs.color);
 
-    if(userPrefs.lightness)
-    {
-      let labColorLight = userPrefs.color.map(function(d)
-      {
-        let col = d3.lab(d);
-        col.l = 100;
-        return col;
-      });
-      let labColorMid = userPrefs.color.map(function(d)
-      {
-        let col = d3.lab(d);
-        col.l = 70;
-        return col;
-      });
-      let labColorDark = userPrefs.color.map(function(d)
-      {
-        let col = d3.lab(d);
-        col.l = 40;
-        return col;
-      });
+    let colorLightnessScale1 = d3.scaleLinear()
+    .domain([1, d3.max(words, d => d.frequency)])
+    //.range([-9,-6,-3,0,3,6,9])
+    .range([30, 0])
 
-      color1 = labColorLight[0];
-      color2 = labColorMid[0];
-      color3 = labColorDark[0];
-    }
-    else
-    {
-      color1 = userPrefs.color[0];
-      color2 = userPrefs.color[0];
-      color2 = userPrefs.color[0];
-    }
-    
-    let colorScale1 = d3.scaleLinear()
-      .domain([1, d3.max(words, d => d.frequency)/2])
-      .range([color1, color2])
-      .interpolate(d3.interpolateLab);
+    console.log(d3.lab(labColor.l+colorLightnessScale1(5), labColor.a, labColor.b));
 
-    let colorScale2 = d3.scaleLinear()
-      .domain([d3.max(words, d => d.frequency)/2, d3.max(words, d => d.frequency)])
-      .range([color2, color3])
-      .interpolate(d3.interpolateLab);
+    console.log(d3.lab(labColor.l+colorLightnessScale1(20), labColor.a, labColor.b));
 
     let cloud = d3cloud()
       .words(words)
@@ -225,23 +179,22 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("fill", d => d<colorScale1.domain[1] ? colorScale1(d.frequency) : colorScale2(d.frequency))
+          //.attr("fill", d => d.frequency<colorScale1.domain()[1] ? colorScale1(d.frequency) : colorScale2(d.frequency))
+          .attr("fill", d => userPrefs.lightness ? d3.lab(labColor.l+colorLightnessScale1(d.frequency), labColor.a, labColor.b) : userPrefs.color)
+          //.attr("fill", d => colorLightnessScale1(d.frequency))
           .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
           .attr("y", d => d.y+dim/2)
-          .text(d => d.text);
+          .text(d => d.text)
+          .semGroup(d => d.semGroup);
       });
 
     words.forEach(function(d){
       d.fontSize = sizeScale(d.frequency);
     });
 
-    cloud.childNodes.forEach(function(d)
-    {
-      console.log(d.fill)
-    })
-
     cloud.start();
     console.log(svg.node());
+
     return svg.node();
   }
 })
