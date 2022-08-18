@@ -4,15 +4,11 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
   //make file read here maybe or add default to html box
-<<<<<<< HEAD
-  text = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
-  stopWords = text.split(" ")
-=======
-  let text = "i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
+
+  let text = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
   let stopWords = text.split(" ");
 
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
->>>>>>> 776bc3b15379e1e24563d036a33bb45afd17c87f
 
   document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
 
@@ -228,7 +224,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .attr('width', 100)
       .attr('height', 20)
       .attr('fill', '#eeeeee')
-      //.attr('display', 'none');
+      .attr('stroke', 'black')
+      .attr('display', 'none');
 
     svg.append('text')
       .attr('id', 'wordFreqTooltip')
@@ -238,6 +235,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .attr('width', 100)
       .attr('height', 10)
       .attr("text-anchor", "top")
+      .attr('display', 'none');
 
     return svg.node();
   }
