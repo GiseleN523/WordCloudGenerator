@@ -20,7 +20,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       minCount: document.getElementById('minCountPref').value,
       fontSize: document.getElementById('fontSizePref').value,
       stopWord: document.getElementById('stopWordsPref').checked,
-      numbers: document.getElementById('numbersPref').checked,
       lightness: document.getElementById('lightnessPref').checked,
       semantic: document.getElementById('semanticPref').checked,
       color: Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value), //convert to array (because it's actually a nodelist) and create array of hex color values
@@ -82,7 +81,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
   function parseText(textStr) {
     let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
-    let cleanWords = words.map(word => word.replace(/[;[]:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
+    let cleanWords = words.map(word => word.replace(/[;:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
     cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
     let wordsDict = {}
     cleanWords.forEach(function(c) {
@@ -103,18 +102,17 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
       wordsFreq.push(thisWord)
     }
-    /*wordsFreq = wordsFreq.sort(function(e, f)
-    {
-      if(e.frequency <= f.frequency)
-      {
-        ? 1 : -1);
-    });*/
-    console.log(wordsFreq);
+
+    wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
     wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
     console.log(wordsFreq)
 
     wordsFreq.forEach(function(wordObj) {
       findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase())
+      console.log(wordObj.text) 
+      console.log(wordObj.text.toLowerCase())  
+      console.log(findMatch)
+      console.log(findMatch !== -1 && wordsFreq[findMatch] !== wordObj)
       if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
         if(wordObj.frequency > wordsFreq[findMatch].frequency) {
           wordObj.frequency += wordsFreq[findMatch].frequency
@@ -126,7 +124,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         }
       } 
     })
-    return wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
+    return wordsFreq;
   }
 
   function addCloudToHTML(allWords, userPrefs) //is there a better name for this? It's just sort of random things I had to separate because of the file loading event
@@ -150,7 +148,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     let i = 0;
     while(i<extraWords.length && i<100)
     {
-      document.getElementById("extraWordsList").innerHTML+="<li>"+extraWords[i].text+", appears "+extraWords[i].frequency+" times</li>";
+      document.getElementById("extraWordsList").innerHTML+="<li>"+extraWords[i].text+", "+extraWords[i].frequency+" occurrences</li>";
       i++;
     }
     
@@ -166,7 +164,16 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         .domain([0, d3.max(words, d => d.frequency)])
         .range([0, userPrefs.fontSize])
 
-    let color = d3.interpolateLab(d3.interpolateLab('#ffffff', userPrefs.color)(.25), d3.interpolateLab(userPrefs.color, '#000000')(.25));
+    let labColor = d3.lab(userPrefs.color);
+
+    let colorLightnessScale1 = d3.scaleLinear()
+    .domain([1, d3.max(words, d => d.frequency)])
+    //.range([-9,-6,-3,0,3,6,9])
+    .range([30, 0])
+
+    console.log(d3.lab(labColor.l+colorLightnessScale1(5), labColor.a, labColor.b));
+
+    console.log(d3.lab(labColor.l+colorLightnessScale1(20), labColor.a, labColor.b));
 
     let cloud = d3cloud()
       .words(words)
@@ -183,30 +190,24 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("fill", d => color(d.frequency/d3.max(words, d => d.frequency)))
+          //.attr("fill", d => d.frequency<colorScale1.domain()[1] ? colorScale1(d.frequency) : colorScale2(d.frequency))
+          .attr("fill", d => userPrefs.lightness ? d3.lab(labColor.l+colorLightnessScale1(d.frequency), labColor.a, labColor.b) : userPrefs.color)
+          //.attr("fill", d => colorLightnessScale1(d.frequency))
           .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
           .attr("y", d => d.y+dim/2)
-          .attr("cursor", "pointer")
           .text(d => d.text)
           //.semGroup(d => d.semGroup);
           //.title(d => d.frequency)
           .on('mouseover', function(event, d) 
           {
-            d3.select('#wordFreqTooltip').text("appears "+d.frequency+" times");
-            d3.select('#wordFreqTooltip').attr('x', d.x+dim/2+5);
-            d3.select('#wordFreqTooltip').attr('y', d.y+dim/2+15);
+            d3.select('#wordFreqTooltip').text("Frequency: "+d.frequency);
+            d3.select('#wordFreqTooltip').attr('x', d.x+dim/2);
             d3.select('#wordFreqTooltip').attr('display', 'block');
-            this.style['font-weight'] = 'bold';
+            d3.select('#wordFreqTooltip').attr('y', d.y+dim/2+16);
+            //d3.select('#wordFreqTooltip').attr('font-weight', 'bold');
             d3.select("#wordFreqTooltipBackground").attr('x', d.x+dim/2);
+            d3.select("#wordFreqTooltipBackground").style.display = 'block';
             d3.select("#wordFreqTooltipBackground").attr('y', d.y+dim/2);
-            d3.select("#wordFreqTooltipBackground").attr('display', 'block');
-          })
-          .on('mouseout', function(event, d) 
-          {
-            d3.select('#wordFreqTooltip').text("");
-            d3.select('#wordFreqTooltip').attr('display', 'none');
-            this.style['font-weight'] = 'normal';
-            d3.select("#wordFreqTooltipBackground").attr('display', 'none');
           })
       });
 
@@ -219,22 +220,23 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
     svg.append('rect')
       .attr('id', 'wordFreqTooltipBackground')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', 150)
+      .attr('x', 10)
+      .attr('y', 20)
+      .attr('width', 100)
       .attr('height', 20)
       .attr('fill', 'white')
       .attr('stroke', 'black')
-      .attr('display', 'none');
+      //.attr('display', 'none');
 
     svg.append('text')
       .attr('id', 'wordFreqTooltip')
       .attr('font-size', '16')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', 150)
+      .attr('x', 10)
+      .attr('y', 20)
+      .attr('width', 100)
       .attr('height', 10)
-      .attr('display', 'none');
+      .attr("text-anchor", "top")
+      //.attr('display', 'none');
 
     return svg.node();
   }
