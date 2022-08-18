@@ -131,7 +131,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   {
     let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
     console.log(newWords);
-    while(newWords.length>0 && (newWords[newWords.length-1].frequency<userPrefs.minCount || (newWords.length<allWords.length && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)))
+    while(newWords.length>0 && (newWords[newWords.length-1].frequency<=userPrefs.minCount || (newWords.length<allWords.length && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)))
     { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minFrequency pref
       newWords.pop();
     }
@@ -202,8 +202,9 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           {
             d3.select('#wordFreqTooltip').text("Frequency: "+d.frequency);
             d3.select('#wordFreqTooltip').attr('x', d.x+dim/2);
-            d3.select('#wordFreqTooltip').style.display = 'block';
+            d3.select('#wordFreqTooltip').attr('display', 'block');
             d3.select('#wordFreqTooltip').attr('y', d.y+dim/2+16);
+            //d3.select('#wordFreqTooltip').attr('font-weight', 'bold');
             d3.select("#wordFreqTooltipBackground").attr('x', d.x+dim/2);
             d3.select("#wordFreqTooltipBackground").style.display = 'block';
             d3.select("#wordFreqTooltipBackground").attr('y', d.y+dim/2);
@@ -223,9 +224,9 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .attr('y', 20)
       .attr('width', 100)
       .attr('height', 20)
-      .attr('fill', '#eeeeee')
+      .attr('fill', 'white')
       .attr('stroke', 'black')
-      .attr('display', 'none');
+      //.attr('display', 'none');
 
     svg.append('text')
       .attr('id', 'wordFreqTooltip')
@@ -235,7 +236,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .attr('width', 100)
       .attr('height', 10)
       .attr("text-anchor", "top")
-      .attr('display', 'none');
+      //.attr('display', 'none');
 
     return svg.node();
   }
