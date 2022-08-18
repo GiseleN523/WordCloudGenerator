@@ -159,7 +159,9 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         .domain([0, d3.max(words, d => d.frequency)])
         .range([0, userPrefs.fontSize])
 
-    let color = d3.interpolateLab(d3.interpolateLab('#ffffff', userPrefs.color)(.25), d3.interpolateLab(userPrefs.color, '#000000')(.25));
+    //let color = d3.interpolateLab(d3.interpolateLab('#ffffff', userPrefs.color)(.25), d3.interpolateLab(userPrefs.color, '#000000')(.25));
+    let color = d3.interpolateLab('#ffffff', userPrefs.color);
+
 
     let cloud = d3cloud()
       .words(words)
