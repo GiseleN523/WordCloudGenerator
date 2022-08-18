@@ -4,8 +4,15 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
   //make file read here maybe or add default to html box
+<<<<<<< HEAD
   text = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
   stopWords = text.split(" ")
+=======
+  let text = "i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
+  let stopWords = text.split(" ");
+
+  let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
+>>>>>>> 776bc3b15379e1e24563d036a33bb45afd17c87f
 
   document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
 
@@ -32,29 +39,30 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       document.getElementById("wordCloudPreview").removeChild(d);
     });
 
-    if(fileInput.files.length>0 || textInput.value.length>0)
+    let allWords;
+    if(fileUploadLast && fileInput.files.length>0)
     {
-      let allWords;
-      if(fileInput.files.length>0)
-      {
-        console.log(fileInput);
+      console.log(fileInput);
 
-        let file = fileInput.files[0];
-        let reader = new FileReader();
-        reader.readAsText(file);
-        reader.onload = function()
-        {
-          allWords = parseText(reader.result);
-          addCloudToHTML(allWords, userPrefs);
-        };
-      }
-      else
+      let file = fileInput.files[0];
+      let reader = new FileReader();
+      reader.readAsText(file);
+      reader.onload = function()
       {
-        allWords = parseText(textInput.value);
+        allWords = parseText(reader.result);
         addCloudToHTML(allWords, userPrefs);
-      }
+      };
+    }
+    else if(!fileUploadLast && textInput.value.length>0)
+    {
+      allWords = parseText(textInput.value);
+      addCloudToHTML(allWords, userPrefs);
     }
   }
+
+  document.getElementById("fileInput").onchange = () => fileUploadLast = true;
+
+  document.getElementById("rawTextInput").onchange = (e) => e.target.value.length>0 ? fileUploadLast = false : fileUploadLast = true;
 
   document.getElementById("stopWordsPref").onchange = function()
   {
@@ -126,7 +134,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   function addCloudToHTML(allWords, userPrefs) //is there a better name for this? It's just sort of random things I had to separate because of the file loading event
   {
     let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
-    while(newWords.length>0 && (newWords[newWords.length-1].frequency<userPrefs.minCount || newWords[newWords.length-1].frequency === allWords[newWords.length].frequency))
+    console.log(newWords);
+    while(newWords.length>0 && (newWords[newWords.length-1].frequency<userPrefs.minCount || (newWords.length<allWords.length && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)))
     { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minFrequency pref
       newWords.pop();
     }
@@ -134,7 +143,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     let cloud = createCloud(newWords, userPrefs);
     document.getElementById("wordCloudPreview").append(cloud);
 
-    let extraWords1 = Array.from(cloud.childNodes).filter(d => (d['__data__'].x>dim/2 || d['__data__'].x<0-dim/2 || d['__data__'].y>dim/2 || d['__data__'].y<0-dim/2)).map(d => d['__data__']);
+    let extraWords1 = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>dim/2 || d['__data__'].x<0-dim/2 || d['__data__'].y>dim/2 || d['__data__'].y<0-dim/2)).map(d => d['__data__']);
     //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
 
     document.getElementById("extraWords").style.display = "block";
@@ -192,6 +201,17 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("y", d => d.y+dim/2)
           .text(d => d.text)
           //.semGroup(d => d.semGroup);
+          //.title(d => d.frequency)
+          .on('mouseover', function(event, d) 
+          {
+            d3.select('#wordFreqTooltip').text("Frequency: "+d.frequency);
+            d3.select('#wordFreqTooltip').attr('x', d.x+dim/2);
+            d3.select('#wordFreqTooltip').style.display = 'block';
+            d3.select('#wordFreqTooltip').attr('y', d.y+dim/2+16);
+            d3.select("#wordFreqTooltipBackground").attr('x', d.x+dim/2);
+            d3.select("#wordFreqTooltipBackground").style.display = 'block';
+            d3.select("#wordFreqTooltipBackground").attr('y', d.y+dim/2);
+          })
       });
 
     words.forEach(function(d){
@@ -200,6 +220,24 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
     cloud.start();
     console.log(svg.node());
+
+    svg.append('rect')
+      .attr('id', 'wordFreqTooltipBackground')
+      .attr('x', 10)
+      .attr('y', 20)
+      .attr('width', 100)
+      .attr('height', 20)
+      .attr('fill', '#eeeeee')
+      //.attr('display', 'none');
+
+    svg.append('text')
+      .attr('id', 'wordFreqTooltip')
+      .attr('font-size', '16')
+      .attr('x', 10)
+      .attr('y', 20)
+      .attr('width', 100)
+      .attr('height', 10)
+      .attr("text-anchor", "top")
 
     return svg.node();
   }
