@@ -103,15 +103,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
       wordsFreq.push(thisWord)
     }
-    /*wordsFreq = wordsFreq.sort(function(e, f)
-    {
-      if(e.frequency <= f.frequency)
-      {
-        ? 1 : -1);
-    });*/
-    console.log(wordsFreq);
+
     wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
-    console.log(wordsFreq)
 
     wordsFreq.forEach(function(wordObj) {
       findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase())
