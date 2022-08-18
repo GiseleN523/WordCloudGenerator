@@ -4,7 +4,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
   //make file read here maybe or add default to html box
-  text = "i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
+  text = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
   stopWords = text.split(" ")
 
   document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
@@ -77,7 +77,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
   function parseText(textStr) {
     let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
-    let cleanWords = words.map(word => word.replace(/[—;:()“”."!?,]/g, "")) //dashes should convert to space not empty str
+    let cleanWords = words.map(word => word.replace(/[;:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
+    cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
     let wordsDict = {}
     cleanWords.forEach(function(c) {
       if(c.length > 0)
@@ -100,15 +101,20 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
     wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
     wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
-    
+    console.log(wordsFreq)
+
     wordsFreq.forEach(function(wordObj) {
-      findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase()) 
+      findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase())
+      console.log(wordObj.text) 
+      console.log(wordObj.text.toLowerCase())  
+      console.log(findMatch)
+      console.log(findMatch !== -1 && wordsFreq[findMatch] !== wordObj)
       if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
         if(wordObj.frequency > wordsFreq[findMatch].frequency) {
           wordObj.frequency += wordsFreq[findMatch].frequency
           wordsFreq.splice(findMatch, 1)
         }
-        else if (wordObj.frequency > wordsFreq[findMatch].frequency) {
+        else if (wordObj.frequency <= wordsFreq[findMatch].frequency) {
           wordsFreq[findMatch].frequency += wordObj.frequency
           wordsFreq.splice(wordsFreq.indexOf(wordObj), 1)
         }
@@ -120,7 +126,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   function addCloudToHTML(allWords, userPrefs) //is there a better name for this? It's just sort of random things I had to separate because of the file loading event
   {
     let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
-    while(newWords.length>0 && allWords.length0 && (newWords[newWords.length-1].frequency<userPrefs.minCount || newWords[newWords.length-1].frequency === allWords[newWords.length].frequency))
+    while(newWords.length>0 && (newWords[newWords.length-1].frequency<userPrefs.minCount || newWords[newWords.length-1].frequency === allWords[newWords.length].frequency))
     { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minFrequency pref
       newWords.pop();
     }
@@ -185,7 +191,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
           .attr("y", d => d.y+dim/2)
           .text(d => d.text)
-          .semGroup(d => d.semGroup);
+          //.semGroup(d => d.semGroup);
       });
 
     words.forEach(function(d){
