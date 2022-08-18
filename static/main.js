@@ -81,7 +81,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
   function parseText(textStr) {
     let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
-    let cleanWords = words.map(word => word.replace(/[;[]:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
+    let cleanWords = words.map(word => word.replace(/[;:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
     cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
     let wordsDict = {}
     cleanWords.forEach(function(c) {
