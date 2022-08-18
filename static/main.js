@@ -103,9 +103,11 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       wordsFreq.push(thisWord)
     }
 
+<<<<<<< HEAD
     wordsFreq = wordsFreq.sort((e, f) => (e.frequency < f.frequency) ? 1 : -1); //sort in descending order
+=======
+>>>>>>> 1e3733142630d91db6af847120ba7d48ff3ee23a
     wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
-    console.log(wordsFreq)
 
     wordsFreq.forEach(function(wordObj) {
       findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase())
