@@ -25,23 +25,27 @@
             </div>
             <div>
                 <label for="fontSizePref">Largest Font Size</label>
-                <input type="range" min="30" max="150" id="fontSizePref">
+                <input type="range" min="30" max="100" id="fontSizePref">
             </div>
             <div>
                 <label for="stopWordwPref">Don't Include Stop Words</label>
-                <input type="checkbox" value="stopwordwords" id="stopWordsPref" checked>
+                <input type="checkbox" id="stopWordsPref" checked>
             </div>
             <div id="stopWordsBoxPrefDiv">
                 <label></label>
                 <textarea id="stopWordsBoxPref" cols="40" rows="5"></textarea>
             </div>
             <div>
+                <label for="numbersPref">Don't Include Numbers</label>
+                <input type="checkbox" id="numbersPref">
+            </div>
+            <div>
                 <label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label>
-                <input type="checkbox" value="lightness" id="lightnessPref" checked>
+                <input type="checkbox" id="lightnessPref" checked>
             </div>
             <div>
                 <label for="semanticPref">Split Words into Semantic Groups</label>
-                <input type="checkbox" value="semantic" id="semanticPref">
+                <input type="checkbox" id="semanticPref">
             </div>
             <div id="colorPref"><label for="colorPref">Color For Each Word Group:</label><br>
                 <label>Group 1 Color</label>
@@ -49,11 +53,11 @@
             </div>
             <div>
                 <label for="rectBoundingPref">Generate Rectangular Bounding Boxes Around Words</label>
-                <input type="checkbox" value="rectBounding" id="rectBoundingPref">
+                <input type="checkbox" id="rectBoundingPref">
             </div>
             <div>
                 <label for="circleBoundingPref">Generate Circular Bounding Boxes Around Words</label>
-                <input type="checkbox" value="circleBounding" id="circleBoundingPref">
+                <input type="checkbox" id="circleBoundingPref">
             </div>
             <div>
                 <label></label>
