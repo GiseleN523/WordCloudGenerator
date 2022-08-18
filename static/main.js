@@ -131,7 +131,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   {
     let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
     console.log(newWords);
-    while(newWords.length>0 && (newWords[newWords.length-1].frequency<userPrefs.minCount || (newWords.length<allWords.length && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)))
+    while(newWords.length>0 && (newWords[newWords.length-1].frequency<=userPrefs.minCount || (newWords.length<allWords.length && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)))
     { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minFrequency pref
       newWords.pop();
     }
