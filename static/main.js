@@ -8,6 +8,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
   let stopWords = defaultStop.split(" ");
 
+  let extraWords = []; //words that weren't included in the cloud, for whatever reason; saved here so we can load more into the box later; removed as they are displayed in box of html
+
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
 
   document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
@@ -77,6 +79,19 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     stopWords = document.getElementById("stopWordsBoxPref").value.split(" ");
   };
 
+  document.getElementById("extraWordsList").onscroll = function() {
+    let extraWordsElem = document.getElementById("extraWordsList");
+    if(extraWordsElem.scrollTop + extraWordsElem.clientHeight + 20 >= extraWordsElem.scrollHeight) {
+      let i = 0;
+      while(extraWords.length>0 && i<100)
+      {
+        let word = extraWords.pop();
+        document.getElementById("extraWordsList").innerHTML+="<li>"+word.text+", appears "+word.frequency+" times</li>";
+        i++;
+      }
+    }
+  };
+
   function parseText(textStr) {
     console.log("start parse text"); //analyzing speed
 
@@ -143,14 +158,14 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
     document.getElementById("extraWords").style.display = "block";
     document.getElementById("extraWordsList").innerHTML = "";
-    let extraWords = extraWords1.concat(allWords.filter(d => !newWords.includes(d))); //words that were too big or too small to include
+    extraWords = extraWords1.concat(allWords.filter(d => !newWords.includes(d))); //words that were too big or too small to include
     let i = 0;
-    while(i<extraWords.length && i<100)
+    while(extraWords.length>0 && i<100)
     {
-      document.getElementById("extraWordsList").innerHTML+="<li>"+extraWords[i].text+", appears "+extraWords[i].frequency+" times</li>";
+      let word = extraWords.pop();
+      document.getElementById("extraWordsList").innerHTML+="<li>"+word.text+", appears "+word.frequency+" times</li>";
       i++;
     }
-    
   }
 
   function createCloud(words, userPrefs)
