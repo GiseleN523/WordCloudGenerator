@@ -5,8 +5,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
   //make file read here maybe or add default to html box
 
-  let text = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
-  let stopWords = text.split(" ");
+  let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
+  let stopWords = defaultStop.split(" ");
 
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
 
@@ -38,8 +38,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     let allWords;
     if(fileUploadLast && fileInput.files.length>0)
     {
-      console.log(fileInput);
-
       let file = fileInput.files[0];
       let reader = new FileReader();
       reader.readAsText(file);
@@ -80,6 +78,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
   };
 
   function parseText(textStr) {
+    console.log("start parse text"); //analyzing speed
+
     let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
     let cleanWords = words.map(word => word.replace(/[;:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
     cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
@@ -102,9 +102,13 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
       wordsFreq.push(thisWord)
     }
+    
+    console.log("words added start cleaning"); //analyzing speed
 
+    //is this n^2?
     wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
 
+    //is this n^2?
     wordsFreq.forEach(function(wordObj) {
       findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase())
       if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
@@ -119,12 +123,13 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       } 
     })
     return wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
+  
+    console.log("end parse text"); //analyzing speed
   }
 
   function addCloudToHTML(allWords, userPrefs) //is there a better name for this? It's just sort of random things I had to separate because of the file loading event
   {
     let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
-    console.log(newWords);
     while(newWords.length>0 && (newWords[newWords.length-1].frequency<=userPrefs.minCount || (newWords.length<allWords.length && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)))
     { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minFrequency pref
       newWords.pop();
