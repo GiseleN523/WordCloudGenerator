@@ -165,10 +165,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         .domain([0, d3.max(words, d => d.frequency)])
         .range([0, userPrefs.fontSize])
 
-    let opacityScale = d3.scaleLinear()
-        .domain([0, d3.max(words, d => d.frequency)])
-        .range([.3, 1])
-
     let lightnessScale = d3.scaleLinear()
       .domain([0, d3.max(words, d => d.frequency)])
       .range([.9, .5])
@@ -204,10 +200,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          //.attr("fill", d => color(d.frequency/d3.max(words, d => d.frequency)))
-          //.attr("fill", color)
           .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.frequency)))
-          //.attr("fill-opacity", d => opacityScale(d.frequency))
           .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
           .attr("y", d => d.y+dim/2)
           .attr("cursor", "pointer")
