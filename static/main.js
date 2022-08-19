@@ -154,6 +154,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .attr("width", dim)
       .attr("height", dim);
 
+    //document.getElementById("wordCloudPreview").append(svg.node()); //for debugging purposes, to see layout created word by word
+
     let sizeScale = d3.scaleSqrt()
         .domain([0, d3.max(words, d => d.frequency)])
         .range([0, userPrefs.fontSize])
@@ -162,7 +164,11 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         .domain([0, d3.max(words, d => d.frequency)])
         .range([.3, 1])
 
-    let color = d3.interpolateLab(d3.interpolateLab('#ffffff', userPrefs.color)(.25), d3.interpolateLab(userPrefs.color, '#000000')(.25));
+    let lightnessScale = d3.scaleLinear()
+      .domain([0, d3.max(words, d => d.frequency)])
+      .range([.9, .5])
+
+    let color = d3.hsl(userPrefs.color);
 
     let cloud = d3cloud()
       .words(words)
@@ -171,6 +177,20 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .rotate(0)
       .fontSize(d => d.fontSize)
       .padding(userPrefs.padding)
+      /*.on("word", function(newWord) //for debugging purposes, to see layout created word by word
+      {
+        console.log(newWord);
+        svg.append("text")
+          .attr("font-size", newWord.fontSize)
+          .attr("font-family", newWord.font)
+          .attr("text-anchor", "middle") //important
+          .attr("fill", d3.hsl(color.h, color.s, lightnessScale(newWord.frequency)))
+          .attr("x", newWord.x) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+          .attr("y", newWord.y)
+          .attr("cursor", "pointer")
+          .attr("semGroup", newWord.semGroup)
+          .text(newWord.text)
+      })*/
       .on("end", function() //when cloud generation is finished, create text in svg element
       {
         svg.selectAll("text")
@@ -180,8 +200,9 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
           //.attr("fill", d => color(d.frequency/d3.max(words, d => d.frequency)))
-          .attr("fill", userPrefs.color)
-          .attr("fill-opacity", d => opacityScale(d.frequency))
+          //.attr("fill", color)
+          .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.frequency)))
+          //.attr("fill-opacity", d => opacityScale(d.frequency))
           .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
           .attr("y", d => d.y+dim/2)
           .attr("cursor", "pointer")
