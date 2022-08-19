@@ -217,7 +217,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
             d3.select("#wordFreqTooltipBackground").attr('y', d.y+dim/2);
             d3.select("#wordFreqTooltipBackground").attr('display', 'block');
           })
-          .on('mouseout', function(event, d) 
+          .on('mouseout', function() 
           {
             d3.select('#wordFreqTooltip').text("");
             d3.select('#wordFreqTooltip').attr('display', 'none');
@@ -250,6 +250,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       .attr('y', 0)
       .attr('width', 150)
       .attr('height', 10)
+      .attr('border-radius', '3')
       .attr('display', 'none');
 
     return svg.node();

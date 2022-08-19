@@ -79,3 +79,28 @@ form div input
     height: 200px;
     width: auto;
 }
+
+ .tooltip
+{
+    border: 1px solid black;
+    border-radius: 15px;
+    padding: 2px 6px;
+    cursor: pointer;
+}
+
+.tooltipContent
+{
+    visibility: hidden;
+    background-color: white;
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid black;
+    font-size: 85%;
+    position: absolute;
+    z-index: 1;
+}
+
+.tooltip:hover .tooltipContent
+{
+    visibility: visible;
+}
