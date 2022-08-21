@@ -1,33 +1,29 @@
-define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
+//this is the functionality specific to our site that references html+css and builds on the more generic app.js (which can also be importable into observable)
+define(['d3.layout.cloud', 'd3', 'app'], function(d3cloud, d3, app)
 {
 
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
   //make file read here maybe or add default to html box
 
-  let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
-  let stopWords = defaultStop.split(" ");
-
-  let extraWords = []; //words that weren't included in the cloud, for whatever reason; saved here so we can load more into the box later; removed as they are displayed in box of html
-
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
 
-  document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
+  document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
 
   document.getElementById('generateButton').onclick = () => 
   {
-    let userPrefs = {
-      padding: document.getElementById('paddingPref').value,
-      numWords: document.getElementById('numWordsPref').value,
-      minCount: document.getElementById('minCountPref').value,
-      fontSize: document.getElementById('fontSizePref').value,
-      stopWord: document.getElementById('stopWordsPref').checked,
-      lightness: document.getElementById('lightnessPref').checked,
-      semantic: document.getElementById('semanticPref').checked,
-      color: Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value), //convert to array (because it's actually a nodelist) and create array of hex color values
-      rectBounding: document.getElementById('rectBoundingPref').checked,
-      circleBounding: document.getElementById('circleBoundingPref').checked
-    }
+    app.widthPref = dim;
+    app.heightPref = dim;
+    app.paddingPref = document.getElementById('paddingPref').value;
+    app.numWordsPref = document.getElementById('numWordsPref').value;
+    app.minCountPref = document.getElementById('minCountPref').value;
+    app.fontSizePref = document.getElementById('fontSizePref').value;
+    app.stopWordPref = document.getElementById('stopWordsPref').checked;
+    app.lightnessPref = document.getElementById('lightnessPref').checked;
+    app.semanticPref = document.getElementById('semanticPref').checked;
+    app.colorPref = Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
+    app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
+    app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
 
     let fileInput = document.getElementById("fileInput");
     let textInput = document.getElementById("rawTextInput");
@@ -37,7 +33,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       document.getElementById("wordCloudPreview").removeChild(d);
     });
 
-    let allWords;
     if(fileUploadLast && fileInput.files.length>0)
     {
       let file = fileInput.files[0];
@@ -45,14 +40,14 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
       reader.readAsText(file);
       reader.onload = function()
       {
-        allWords = parseText(reader.result);
-        addCloudToHTML(allWords, userPrefs);
+        let cloudData = app.createCloud(reader.result);
+        displayCloud(cloudData);
       };
     }
     else if(!fileUploadLast && textInput.value.length>0)
     {
-      allWords = parseText(textInput.value);
-      addCloudToHTML(allWords, userPrefs);
+      let cloudData = app.createCloud(textInput.value);
+      displayCloud(cloudData);
     }
   }
 
@@ -76,198 +71,37 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
   document.getElementById("stopWordsBoxPref").onchange = function()
   {
-    stopWords = document.getElementById("stopWordsBoxPref").value.split(" ");
+    app.stopWords = document.getElementById("stopWordsBoxPref").value.split(" ");
   };
 
   document.getElementById("extraWordsList").onscroll = function() {
     let extraWordsElem = document.getElementById("extraWordsList");
-    if(extraWordsElem.scrollTop + extraWordsElem.clientHeight + 20 >= extraWordsElem.scrollHeight) {
-      let i = 0;
-      while(extraWords.length>0 && i<100)
-      {
-        let word = extraWords.pop();
-        document.getElementById("extraWordsList").innerHTML+="<li>"+word.text+", appears "+word.frequency+" times</li>";
-        i++;
-      }
+    if(extraWordsElem.scrollTop + extraWordsElem.clientHeight + 20 >= extraWordsElem.scrollHeight) 
+    {
+      appendToExtraWordsList(100);
     }
   };
 
-  function parseText(textStr) {
-    console.log("start parse text"); //analyzing speed
-
-    let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
-    let cleanWords = words.map(word => word.replace(/[;:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
-    cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
-    let wordsDict = {}
-    cleanWords.forEach(function(c) {
-      if(c.length > 0)
-      {
-        if(c in wordsDict) {
-          wordsDict[c]++
-        }
-        else {
-          wordsDict[c] = 1
-        }
-      }
-    })
-    let textArr = Object.keys(wordsDict)
-    let freqArr = Object.values(wordsDict)
-    let wordsFreq = []
-    for(let i = 0; i < Object.keys(wordsDict).length; i++){
-      let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
-      wordsFreq.push(thisWord)
-    }
-    
-    console.log("words added start cleaning"); //analyzing speed
-
-    //is this n^2?
-    wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
-
-    //is this n^2?
-    wordsFreq.forEach(function(wordObj) {
-      findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase())
-      if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
-        if(wordObj.frequency > wordsFreq[findMatch].frequency) {
-          wordObj.frequency += wordsFreq[findMatch].frequency
-          wordsFreq.splice(findMatch, 1)
-        }
-        else if (wordObj.frequency <= wordsFreq[findMatch].frequency) {
-          wordsFreq[findMatch].frequency += wordObj.frequency
-          wordsFreq.splice(wordsFreq.indexOf(wordObj), 1)
-        }
-      } 
-    })
-    return wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
-  
-    console.log("end parse text"); //analyzing speed
-  }
-
-  function addCloudToHTML(allWords, userPrefs) //is there a better name for this? It's just sort of random things I had to separate because of the file loading event
+  function displayCloud(cloudData)
   {
-    let newWords = allWords.slice(0, Math.min(allWords.length, userPrefs.numWords)); //if there are more words in text than user specified, remove the extra
-    while(newWords.length>0 && (newWords[newWords.length-1].frequency<=userPrefs.minCount || (newWords.length<allWords.length && newWords[newWords.length-1].frequency === allWords[newWords.length].frequency)))
-    { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minFrequency pref
-      newWords.pop();
-    }
-
-    let cloud = createCloud(newWords, userPrefs);
-    document.getElementById("wordCloudPreview").append(cloud);
-
-    let extraWords1 = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>dim/2 || d['__data__'].x<0-dim/2 || d['__data__'].y>dim/2 || d['__data__'].y<0-dim/2)).map(d => d['__data__']);
-    //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
+    document.getElementById("wordCloudPreview").append(cloudData);
 
     document.getElementById("extraWords").style.display = "block";
     document.getElementById("extraWordsList").innerHTML = "";
-    extraWords = extraWords1.concat(allWords.filter(d => !newWords.includes(d))); //words that were too big or too small to include
+    appendToExtraWordsList(100);
+  }
+
+  function appendToExtraWordsList(numToAdd)
+  {
     let i = 0;
-    while(extraWords.length>0 && i<100)
+    console.log(app.extraWords);
+    while(app.extraWords.length>0 && i<numToAdd)
     {
-      let word = extraWords.pop();
+      let word = app.extraWords.shift(); //remove items from app's list of "extra words" as they get added to scroll box
       document.getElementById("extraWordsList").innerHTML+="<li>"+word.text+", appears "+word.frequency+" times</li>";
       i++;
     }
   }
 
-  function createCloud(words, userPrefs)
-  {
-    let svg = d3.create("svg")
-      .attr("width", dim)
-      .attr("height", dim);
-
-    //document.getElementById("wordCloudPreview").append(svg.node()); //for debugging purposes, to see layout created word by word
-
-    let sizeScale = d3.scaleSqrt()
-        .domain([0, d3.max(words, d => d.frequency)])
-        .range([0, userPrefs.fontSize])
-
-    let lightnessScale = d3.scaleLinear()
-      .domain([0, d3.max(words, d => d.frequency)])
-      .range([.9, .5])
-
-    let color = d3.hsl(userPrefs.color);
-
-    let cloud = d3cloud()
-      .words(words)
-      .size([dim, dim])
-      .font("sans-serif")
-      .rotate(0)
-      .fontSize(d => d.fontSize)
-      .padding(userPrefs.padding)
-      /*.on("word", function(newWord) //for debugging purposes, to see layout created word by word
-      {
-        console.log(newWord);
-        svg.append("text")
-          .attr("font-size", newWord.fontSize)
-          .attr("font-family", newWord.font)
-          .attr("text-anchor", "middle") //important
-          .attr("fill", d3.hsl(color.h, color.s, lightnessScale(newWord.frequency)))
-          .attr("x", newWord.x) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-          .attr("y", newWord.y)
-          .attr("cursor", "pointer")
-          .attr("semGroup", newWord.semGroup)
-          .text(newWord.text)
-      })*/
-      .on("end", function() //when cloud generation is finished, create text in svg element
-      {
-        svg.selectAll("text")
-          .data(words)
-          .join("text")
-          .attr("font-size", d => d.fontSize)
-          .attr("font-family", d => d.font)
-          .attr("text-anchor", "middle") //important
-          .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.frequency)))
-          .attr("x", d => d.x+dim/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-          .attr("y", d => d.y+dim/2)
-          .attr("cursor", "pointer")
-          .attr("semGroup", d => d.semGroup)
-          .text(d => d.text)
-          .on('mouseover', function(event, d) 
-          {
-            d3.select('#wordFreqTooltip').text("appears "+d.frequency+" times");
-            d3.select('#wordFreqTooltip').attr('x', d.x+dim/2+5);
-            d3.select('#wordFreqTooltip').attr('y', d.y+dim/2+15);
-            d3.select('#wordFreqTooltip').attr('display', 'block');
-            this.style['font-weight'] = 'bold';
-            d3.select("#wordFreqTooltipBackground").attr('x', d.x+dim/2);
-            d3.select("#wordFreqTooltipBackground").attr('y', d.y+dim/2);
-            d3.select("#wordFreqTooltipBackground").attr('display', 'block');
-          })
-          .on('mouseout', function() 
-          {
-            d3.select('#wordFreqTooltip').text("");
-            d3.select('#wordFreqTooltip').attr('display', 'none');
-            this.style['font-weight'] = 'normal';
-            d3.select("#wordFreqTooltipBackground").attr('display', 'none');
-          });
-      });
-
-    words.forEach(function(d){
-      d.fontSize = sizeScale(d.frequency);
-    });
-
-    cloud.start();
-    console.log(svg.node());
-
-    svg.append('rect')
-      .attr('id', 'wordFreqTooltipBackground')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', 150)
-      .attr('height', 20)
-      .attr('fill', 'white')
-      .attr('stroke', 'black')
-      .attr('display', 'none');
-
-    svg.append('text')
-      .attr('id', 'wordFreqTooltip')
-      .attr('font-size', '16')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', 150)
-      .attr('height', 10)
-      .attr('border-radius', '3')
-      .attr('display', 'none');
-
-    return svg.node();
-  }
+  
 })
