@@ -24,6 +24,7 @@ define(['app'], function(app)
     app.colorPref = Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
+    console.log(app.circleBoundingPref);
 
     let fileInput = document.getElementById("fileInput");
     let textInput = document.getElementById("rawTextInput");
