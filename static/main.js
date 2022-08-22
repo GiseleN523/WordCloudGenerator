@@ -61,7 +61,7 @@ define(['app'], function(app)
     if(source.checked)
     {
       document.getElementById("stopWordsBoxPrefDiv").style.display = "block";
-      document.getElementById("stopWordsBoxPref").value = stopWords.toString().replaceAll(",", " ");
+      document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
     }
     else
     {
