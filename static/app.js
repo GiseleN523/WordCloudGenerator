@@ -136,10 +136,10 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         
     function parseText(textStr, stopWords, stopWordPref) 
     {
-        console.log("start parse text"); //analyzing speed
     
         let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
-        let cleanWords = words.map(word => word.replace(/[;:()“”."!?,—]/g, "")) //dashes should convert to space not empty str
+
+        let cleanWords = words.map(word => word.replace(/[;:\[\]()“”."!?,—]/g, "")) //dashes should convert to space not empty str
         cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
         let wordsDict = {}
         cleanWords.forEach(function(c) {
@@ -155,34 +155,53 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         })
         let textArr = Object.keys(wordsDict)
         let freqArr = Object.values(wordsDict)
+        console.log(Object.keys(wordsDict).length)
         let wordsFreq = []
-        for(let i = 0; i < Object.keys(wordsDict).length; i++){
+        for(let i = 0; i < textArr.length; i++){
           let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
           wordsFreq.push(thisWord)
         }
-        
-        console.log("words added start cleaning"); //analyzing speed
     
-        //is this n^2?
         if(stopWordPref)
         {
             wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
         }
-    
-        //is this n^2?
+
+        indDict = {}
+        let i = 0;
         wordsFreq.forEach(function(wordObj) {
-          findMatch = wordsFreq.map(y => y.text).indexOf(wordObj.text.toLowerCase())
+          indDict[wordObj.text] = i;
+          i++;
+        })
+        toSpl = [];
+
+        wordsFreq.forEach(function(wordObj) {
+          let findMatch = -1;
+          if(wordObj.text.toLowerCase() in indDict) {
+            findMatch = indDict[wordObj.text.toLowerCase()] ;
+          }
+
+          let matchFreq = -1;
+          if(findMatch !== -1) {
+            matchFreq = wordsFreq[findMatch].frequency;
+          }
+          let thisFreq = wordObj.frequency;
           if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
-            if(wordObj.frequency > wordsFreq[findMatch].frequency) {
-              wordObj.frequency += wordsFreq[findMatch].frequency
-              wordsFreq.splice(findMatch, 1)
+            if(thisFreq > wordsFreq[findMatch].frequency) {
+              wordObj.frequency += matchFreq
+              toSpl.push(findMatch)
             }
-            else if (wordObj.frequency <= wordsFreq[findMatch].frequency) {
-              wordsFreq[findMatch].frequency += wordObj.frequency
-              wordsFreq.splice(wordsFreq.indexOf(wordObj), 1)
+            else if (thisFreq <= matchFreq) {
+              wordsFreq[findMatch].frequency += thisFreq
+              toSpl.push(wordsFreq.indexOf(wordObj))
             }
           } 
         })
+        
+        toSpl.forEach(function(duplInd) {
+          wordsFreq.splice(duplInd, 1)
+        })
+
         return wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
     }
 });
