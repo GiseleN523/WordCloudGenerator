@@ -1,5 +1,5 @@
 //this is the functionality specific to our site that references html+css and builds on the more generic app.js (which can also be importable into observable)
-define(['d3.layout.cloud', 'd3', 'app'], function(d3cloud, d3, app)
+define(['app'], function(app)
 {
 
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
