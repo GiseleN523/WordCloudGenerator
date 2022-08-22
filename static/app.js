@@ -28,8 +28,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
             }
 
             let svg = d3.create("svg")
-            .attr("width", this.widthPref)
-            .attr("height", this.heightPref);
+              .attr("width", this.widthPref)
+              .attr("height", this.heightPref);
 
             //document.getElementById("wordCloudPreview").append(svg.node()); //for debugging purposes, to see layout created word by word
 
@@ -43,74 +43,57 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .domain([0, d3.max(words, d => d.value)])
                 .range(this.lightnessPref ? [.9, .5] : [color.l, color.l])
 
-            console.log(circleBoundingPref);
-
             if(this.rectBoundingPref)
             {
               //create cloud with rectangular bounding boxes
             }
             else if(this.circleBoundingPref)
             {
-              let pack = d3.pack()
-                .size(this.widthPref, this.heightPref)
-                //.value(d => d.value);
-
               let root = d3.hierarchy({
-                "children" : words
-              })
+                "children" : words})
+                .sum(d => d.hasOwnProperty("value") ? d.value : 0);
+
+              let pack = d3.pack()
+                //.padding(15)
+                .size([this.widthPref, this.heightPref]);
 
               pack(root);
 
-              console.log(root);
-              console.log(root.descendants());
+              root.descendants().forEach(function(d)
+              {
+                d.data.x = d.x; //add x and y coords to data, AKA that item in words array, so they're more easily accessible
+                d.data.y = d.y;
+                d.data.r = d.r;
+                d.data.fontSize = sizeScale(d.value);
+                d.data.font = "sans-serif";
+              });
 
-              svg.selectAll('circle')
-                .data(root.descendants())
-                //.enter()
-                .append('circle')
-                //.classed('node', true)
-                .attr('cx', d => d.x)
-                .attr('cy', d => d.y)
-                .attr('r', d => d.r);
-
-                words.forEach(function(d){
-                  d.fontSize = sizeScale(d.value);
-                });
-    
-                console.log(svg.node());
-                
-                let size = this.size();
-
+              svg.selectAll("circle")
+                .data(root.descendants().filter(d => d.height===0).map(d => d.data)) //only add circles to leaves, then look at data, AKA that item in words array
+                .join("circle")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("r", d => d.r)
+                .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.value)))
+                .attr("stroke", "black")
+                .attr("cursor", "pointer")
+                .on('mouseover', (event, d) => showWordFreqTooltip(d))
+                .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+                    
                 svg.selectAll("text")
-                  .data(words)
+                  .data(root.descendants().filter(d => d.height===0).map(d => d.data)) //only add text to leaves, then look at data, that item in words array
                   .join("text")
                   .attr("font-size", d => d.fontSize)
                   .attr("font-family", d => d.font)
-                  .attr("text-anchor", "middle") //important
-                  .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.value)))
-                  .attr("x", d => d.x+size[0]/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                  .attr("y", d => d.y+size[1]/2)
-                  .attr("cursor", "pointer")
+                  .attr("text-anchor", "middle")
+                  .attr("alignment-baseline", "center")
+                  .attr("x", d => d.x)
+                  .attr("y", d => d.y)
                   .attr("semGroup", d => d.semGroup)
+                  .attr("cursor", "pointer")
                   .text(d => d.text)
-                  .on('mouseover', function(event, d) 
-                  {
-                    d3.select('#wordFreqTooltip').text("appears "+d.value+" times");
-                    d3.select('#wordFreqTooltip').attr('x', d.x+size[0]/2+5);
-                    d3.select('#wordFreqTooltip').attr('y', d.y+size[1]/2+15);
-                    d3.select('#wordFreqTooltip').attr('display', 'block');
-                    this.style['font-weight'] = 'bold';
-                    d3.select("#wordFreqTooltipBackground").attr('x', d.x+size[0]/2);
-                    d3.select("#wordFreqTooltipBackground").attr('y', d.y+size[1]/2);
-                    d3.select("#wordFreqTooltipBackground").attr('display', 'block');
-                  })
-                  .on('mouseout', function() 
-                  {
-                    d3.select('#wordFreqTooltip').text("");
-                    d3.select('#wordFreqTooltip').attr('display', 'none');
-                    this.style['font-weight'] = 'normal';
-                    d3.select("#wordFreqTooltipBackground").attr('display', 'none');
-                  });
+                  .on('mouseover', (event, d) => showWordFreqTooltip(d))
+                  .on('mouseout', (event, d) => hideWordFreqTooltip(d));
             }
             else
             {
@@ -138,6 +121,13 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .on("end", function() //when cloud generation is finished, create text in svg element
                 {
                     let size = this.size();
+
+                    words.forEach(function(d) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                    {
+                      d.x += size[0]/2;
+                      d.y += size[1]/2;
+                    });
+
                     svg.selectAll("text")
                         .data(words)
                         .join("text")
@@ -145,29 +135,13 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                         .attr("font-family", d => d.font)
                         .attr("text-anchor", "middle") //important
                         .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.value)))
-                        .attr("x", d => d.x+size[0]/2) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                        .attr("y", d => d.y+size[1]/2)
+                        .attr("x", d => d.x)
+                        .attr("y", d => d.y)
                         .attr("cursor", "pointer")
                         .attr("semGroup", d => d.semGroup)
                         .text(d => d.text)
-                        .on('mouseover', function(event, d) 
-                        {
-                          d3.select('#wordFreqTooltip').text("appears "+d.value+" times");
-                          d3.select('#wordFreqTooltip').attr('x', d.x+size[0]/2+5);
-                          d3.select('#wordFreqTooltip').attr('y', d.y+size[1]/2+15);
-                          d3.select('#wordFreqTooltip').attr('display', 'block');
-                          this.style['font-weight'] = 'bold';
-                          d3.select("#wordFreqTooltipBackground").attr('x', d.x+size[0]/2);
-                          d3.select("#wordFreqTooltipBackground").attr('y', d.y+size[1]/2);
-                          d3.select("#wordFreqTooltipBackground").attr('display', 'block');
-                        })
-                        .on('mouseout', function() 
-                        {
-                          d3.select('#wordFreqTooltip').text("");
-                          d3.select('#wordFreqTooltip').attr('display', 'none');
-                          this.style['font-weight'] = 'normal';
-                          d3.select("#wordFreqTooltipBackground").attr('display', 'none');
-                        });
+                        .on('mouseover', (event, d) => showWordFreqTooltip(d))
+                        .on('mouseout', (event, d) => hideWordFreqTooltip(d));
                 });
 
                 words.forEach(function(d){
@@ -201,6 +175,30 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .attr('height', 10)
                 .attr('border-radius', '3')
                 .attr('display', 'none');
+
+            function showWordFreqTooltip(d)
+            {
+              console.log(d);
+              d3.select('#wordFreqTooltip')
+                .text("appears "+d.value+" times")
+                .attr('x', d.x+5)
+                .attr('y', d.y+20)
+                .attr("text-anchor", "middle")
+                .attr('display', 'block');
+              //d.style['font-weight'] = 'bold';
+              d3.select("#wordFreqTooltipBackground")
+                .attr('x', d.x-75)
+                .attr('y', d.y+5)
+                .attr('display', 'block');
+            }
+
+            function hideWordFreqTooltip(d)
+            {
+              d3.select('#wordFreqTooltip').text("");
+              d3.select('#wordFreqTooltip').attr('display', 'none');
+              //d.style['font-weight'] = 'normal';
+              d3.select("#wordFreqTooltipBackground").attr('display', 'none');
+            }
 
             return svg.node();
         }
