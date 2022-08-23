@@ -59,8 +59,9 @@
           var start = Date.now();
           while (Date.now() - start < timeInterval && ++i < n && timer) { //while time elapsed is less than timeInterval (provided timer exists). i is the index of word to be placed
             var d = data[i];
-            d.x = size[0]/2; //(size[0] * (random() + .5)) >> 1; //set x to a position around the center of the canvas. 
-            d.y = size[1]/2; //(size[1] * (random() + .5)) >> 1; //same for y
+            console.log(random())
+            d.x = (size[0] * (random() + .5)) >> 1; //set x to a position around the center of the canvas. 
+            d.y = (size[1] * (random() + .5)) >> 1; //same for y
             cloudSprite(contextAndRatio, d, data, i); 
             if (d.hasText && place(board, d, bounds)) { //if there is text associated with the tag and it is then successfully placed:
               tags.push(d); //add this item in data to tags

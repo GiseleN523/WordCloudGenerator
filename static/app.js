@@ -45,11 +45,16 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
             if(this.rectBoundingPref)
             {
+              words.forEach(function(d){
+                d.fontSize = sizeScale(d.frequency);
+              });
+
               let fillerWords = []; //fake words to "trick" d3-cloud into thinking words of the same frequency are all the same dimensions
               words.forEach((d) => fillerWords.push({
-                text: "lplplplplplplpl",
+                text: String.fromCharCode(9608)+String.fromCharCode(9608)+String.fromCharCode(9608)+String.fromCharCode(9608)+String.fromCharCode(9608),
                 frequency: d.frequency,
-                semGroup: d.semGroup
+                semGroup: d.semGroup,
+                fontSize: d.fontSize
               }));
 
               let cloud = d3cloud()
@@ -58,30 +63,29 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .font("sans-serif")
                 .rotate(0)
                 .fontSize(d => d.fontSize)
-                .padding(this.paddingPref)
-                /*.on("word", function(newWord) //for debugging purposes, to see layout created word by word
-                {
-                    console.log(newWord);
-                    svg.append("text")
-                    .attr("font-size", newWord.fontSize)
-                    .attr("font-family", newWord.font)
-                    .attr("text-anchor", "middle") //important
-                    .attr("fill", d3.hsl(color.h, color.s, lightnessScale(newWord.frequency)))
-                    .attr("x", newWord.x) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                    .attr("y", newWord.y)
-                    .attr("cursor", "pointer")
-                    .attr("semGroup", newWord.semGroup)
-                    .text(newWord.text)
-                })*/
+                .padding(0)
+                .random(() => .5) //important, overrides default placement function in d3-cloud and always starts spiral at center
                 .on("end", function() //when cloud generation is finished, create text in svg element
                 {
                     console.log(fillerWords);
                     let size = this.size();
 
+                    let tempSvg = d3.create('svg').attr('height', 50).attr('width', 50)
+  
                     fillerWords.forEach(function(d) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
                     {
+                      console.log(d);
                       d.x += size[0]/2;
                       d.y += size[1]/2;
+                      /*let svg1 = "<svg width='200' height='200><text style ='font-size = '"+d.fontSize+"'; font-family: '"+d.font+"'>"+d.text+"</text></svg>";
+                      let txt = d3.querySelectorAll("text");
+                      console.log(txt);
+                      console.log(svg1);
+                      tempSvg.append("text")
+                        .attr("font-size", d.fontSize)
+                        .attr("font-family", d.font)
+                        .text(d.text)
+                      d.realWidth = tempSvg.children[tempSvg.children.length-1];*/
                     });
 
                     svg.selectAll("text")
@@ -95,26 +99,46 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                       .attr("y", d => d.y)
                       .attr("cursor", "pointer")
                       .attr("semGroup", d => d.semGroup)
-                      .text(d => d.text)
+                      .text(d => words[fillerWords.indexOf(d)].text)
                       .on('mouseover', (event, d) => showWordFreqTooltip(d))
                       .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+
+                    let i = 0;
+                    while(i<svg.node().children.length)
+                    {
+                      fillerWords[i].width = svg.node().children[i].getBBox().width;
+                      console.log(svg.node().children[i].getBBox())
+                      i++;
+                    }
 
                     svg.selectAll("rect")
                       .data(fillerWords)
                       .join("rect")
-                      .attr("x", d => d.x+d.x0)
+                      .attr("x", d => d.x+d.x0)//-d.realWidth/2)
                       .attr("y", d => d.y+d.y0)
-                      .attr("width", d => d.x0+d.x1)
-                      .attr("height", d => d.y0+d.y1)
+                      .attr("width", d => d.width)//Math.abs(d.x0)+d.x1)//+d.realWidth/2)
+                      .attr("height", d => Math.abs(d.y0)+d.y1-(d.fontSize*.6))
                       .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.frequency)))
                       .attr("stroke", "black")
                       .attr("cursor", "pointer")
                       .on('mouseover', (event, d) => showWordFreqTooltip(d))
                       .on('mouseout', (event, d) => hideWordFreqTooltip(d));
-                });
 
-                words.forEach(function(d){
-                  d.fontSize = sizeScale(d.frequency);
+                    svg.selectAll("text")
+                      .data(fillerWords)
+                      .join("text")
+                      .attr("font-size", d => d.fontSize)
+                      .attr("font-family", d => d.font)
+                      .attr("text-anchor", "middle") //important
+                      .attr("fill", "black")
+                      .attr("x", d => d.x)
+                      .attr("y", d => d.y)
+                      .attr("cursor", "pointer")
+                      .attr("semGroup", d => d.semGroup)
+                      .text(d => words[fillerWords.indexOf(d)].text)
+                      .on('mouseover', (event, d) => showWordFreqTooltip(d))
+                      .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+
                 });
     
                 cloud.start();
@@ -181,6 +205,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .rotate(0)
                 .fontSize(d => d.fontSize)
                 .padding(this.paddingPref)
+                .random(() => .5) //important
                 /*.on("word", function(newWord) //for debugging purposes, to see layout created word by word
                 {
                     console.log(newWord);

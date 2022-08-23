@@ -12,10 +12,6 @@
         <h3>Preferences</h3>
         <form>
             <div>
-                <label for="paddingPref">Padding Between Words</label>
-                <input type="text" id="paddingPref" value="3">
-            </div>
-            <div>
                 <label for="numWordsPref">Maximum Number of Words to Include</label>
                 <input type="text" id="numWordsPref" value="100">
             </div>
@@ -28,7 +24,11 @@
                 <input type="range" min="20" max="80" id="fontSizePref">
             </div>
             <div>
-                <label for="stopWordwPref">Don't Include Stop Words</label>
+                <label for="paddingPref">Padding Between Words</label>
+                <input type="range" min="0" max="20" id="paddingPref" value="3">
+            </div>
+            <div>
+                <label for="stopWordsPref">Don't Include Stop Words</label>
                 <input type="checkbox" id="stopWordsPref" checked>
             </div>
             <div id="stopWordsBoxPrefDiv">
@@ -49,7 +49,7 @@
             </div>
             <div>
                 <label for="rectBoundingPref">Generate Rectangular Bounding Boxes Around Words</label>
-                <input type="checkbox" id="rectBoundingPref">
+                <input type="checkbox" id="rectBoundingPref" checked>
             </div>
             <div>
                 <label for="circleBoundingPref">Generate Circular Bounding Boxes Around Words</label>
