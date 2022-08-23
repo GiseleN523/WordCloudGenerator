@@ -6,8 +6,7 @@ body
 
 form div
 {
-    margin: 20px;
-    
+    margin: 2%;
 }
 
 form div label, #rightContentColumn h3
@@ -39,42 +38,45 @@ form div input
     text-align: left;
 }
 
+form input[type="text"]
+{
+    width: 4em
+}
+
 #leftContentColumn
 {
     width: 700px;
     float: left;
-    margin: 0px 20px 20% 20px;
+    margin: 0px 2% 20% 1%;
 }
 
 #wordCloudPreview
 {
-    width: 700px;
-    height: 700px;
+    width: 100%;
+    aspect-ratio: 1;
     border: 2px solid black;
     border-radius: 5px;
 }
 
-#fileInput
+#fileInput, #rawTextInput
 {
-    margin-top: 20px;
+    margin-top: 3%;
 }
 
 #rawTextInput
 {
-    margin-top: 20px;
-    width: 700px;
+    width: 100%;
 }
 
 #extraWords
 {
     display: none;
-    margin-top: 10px;
+    margin-top: 2%;
 }
 
 #extraWordsList
 {
-    padding-left: 50px;
-    margin: 10px;
+    margin: 2%;
     overflow: scroll;
     height: 200px;
     width: auto;
@@ -83,8 +85,8 @@ form div input
  .tooltip
 {
     border: 1px solid black;
-    border-radius: 15px;
-    padding: 2px 6px;
+    border-radius: 2em;
+    padding: .25em .5em;
     cursor: pointer;
 }
 
@@ -92,8 +94,8 @@ form div input
 {
     visibility: hidden;
     background-color: white;
-    padding: 8px;
-    border-radius: 6px;
+    padding: 1em;
+    border-radius: 1em;
     border: 1px solid black;
     font-size: 85%;
     position: absolute;
