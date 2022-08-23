@@ -45,11 +45,84 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
 
             if(this.rectBoundingPref)
             {
-              //create cloud with rectangular bounding boxes
+              let fillerWords = []; //fake words to "trick" d3-cloud into thinking words of the same frequency are all the same dimensions
+              words.forEach((d) => fillerWords.push({
+                text: "lplplplplplplpl",
+                frequency: d.frequency,
+                semGroup: d.semGroup
+              }));
+
+              let cloud = d3cloud()
+                .words(fillerWords)
+                .size([this.widthPref, this.heightPref])
+                .font("sans-serif")
+                .rotate(0)
+                .fontSize(d => d.fontSize)
+                .padding(this.paddingPref)
+                /*.on("word", function(newWord) //for debugging purposes, to see layout created word by word
+                {
+                    console.log(newWord);
+                    svg.append("text")
+                    .attr("font-size", newWord.fontSize)
+                    .attr("font-family", newWord.font)
+                    .attr("text-anchor", "middle") //important
+                    .attr("fill", d3.hsl(color.h, color.s, lightnessScale(newWord.frequency)))
+                    .attr("x", newWord.x) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                    .attr("y", newWord.y)
+                    .attr("cursor", "pointer")
+                    .attr("semGroup", newWord.semGroup)
+                    .text(newWord.text)
+                })*/
+                .on("end", function() //when cloud generation is finished, create text in svg element
+                {
+                    console.log(fillerWords);
+                    let size = this.size();
+
+                    fillerWords.forEach(function(d) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                    {
+                      d.x += size[0]/2;
+                      d.y += size[1]/2;
+                    });
+
+                    svg.selectAll("text")
+                      .data(fillerWords)
+                      .join("text")
+                      .attr("font-size", d => d.fontSize)
+                      .attr("font-family", d => d.font)
+                      .attr("text-anchor", "middle") //important
+                      .attr("fill", "black")
+                      .attr("x", d => d.x)
+                      .attr("y", d => d.y)
+                      .attr("cursor", "pointer")
+                      .attr("semGroup", d => d.semGroup)
+                      .text(d => d.text)
+                      .on('mouseover', (event, d) => showWordFreqTooltip(d))
+                      .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+
+                    svg.selectAll("rect")
+                      .data(fillerWords)
+                      .join("rect")
+                      .attr("x", d => d.x+d.x0)
+                      .attr("y", d => d.y+d.y0)
+                      .attr("width", d => d.x0+d.x1)
+                      .attr("height", d => d.y0+d.y1)
+                      .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.frequency)))
+                      .attr("stroke", "black")
+                      .attr("cursor", "pointer")
+                      .on('mouseover', (event, d) => showWordFreqTooltip(d))
+                      .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+                });
+
+                words.forEach(function(d){
+                  d.fontSize = sizeScale(d.frequency);
+                });
+    
+                cloud.start();
+                console.log(svg.node());
             }
             else if(this.circleBoundingPref)
             {
-                sizeScale = d3.scaleSqrt()
+              sizeScale = d3.scaleSqrt()
                 .domain([0, d3.max(words, d => d.frequency)])
                 .range([0, this.fontSizePref/2])
 
@@ -58,7 +131,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .sum(d => d.hasOwnProperty("frequency") ? d.frequency : 0);
 
               let pack = d3.pack()
-                //.padding(15)
+                .padding(this.paddingPref)
                 .size([this.widthPref, this.heightPref]);
 
               pack(root);
