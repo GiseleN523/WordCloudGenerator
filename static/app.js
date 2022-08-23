@@ -22,8 +22,8 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         {
             wordsParsed = parseText(wordsRaw, this.stopWords, this.stopWordPref);
             let words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
-            while(words.length>0 && (words[words.length-1].value<=this.minCountPref || (words.length<wordsParsed.length && words[words.length-1].value === wordsParsed[words.length].value)))
-            { //remove words one at a time until there are no cases of a word being in the list while another word with the same value is not in the list, and also remove words with value less than minvalue pref
+            while(words.length>0 && (words[words.length-1].frequency<=this.minCountPref || (words.length<wordsParsed.length && words[words.length-1].frequency === wordsParsed[words.length].frequency)))
+            { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
                 words.pop();
             }
 
@@ -36,11 +36,11 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
             let color = d3.hsl(this.colorPref[0]);
 
             let sizeScale = d3.scaleSqrt()
-                .domain([0, d3.max(words, d => d.value)])
+                .domain([0, d3.max(words, d => d.frequency)])
                 .range([0, this.fontSizePref])
 
             let lightnessScale = d3.scaleLinear()
-                .domain([0, d3.max(words, d => d.value)])
+                .domain([0, d3.max(words, d => d.frequency)])
                 .range(this.lightnessPref ? [.9, .5] : [color.l, color.l])
 
             if(this.rectBoundingPref)
@@ -49,9 +49,13 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
             }
             else if(this.circleBoundingPref)
             {
+                sizeScale = d3.scaleSqrt()
+                .domain([0, d3.max(words, d => d.frequency)])
+                .range([0, this.fontSizePref/2])
+
               let root = d3.hierarchy({
                 "children" : words})
-                .sum(d => d.hasOwnProperty("value") ? d.value : 0);
+                .sum(d => d.hasOwnProperty("frequency") ? d.frequency : 0);
 
               let pack = d3.pack()
                 //.padding(15)
@@ -64,7 +68,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 d.data.x = d.x; //add x and y coords to data, AKA that item in words array, so they're more easily accessible
                 d.data.y = d.y;
                 d.data.r = d.r;
-                d.data.fontSize = sizeScale(d.value);
+                d.data.fontSize = sizeScale(d.data.frequency);
                 d.data.font = "sans-serif";
               });
 
@@ -74,7 +78,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .attr("cx", d => d.x)
                 .attr("cy", d => d.y)
                 .attr("r", d => d.r)
-                .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.value)))
+                .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.frequency)))
                 .attr("stroke", "black")
                 .attr("cursor", "pointer")
                 .on('mouseover', (event, d) => showWordFreqTooltip(d))
@@ -86,7 +90,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                   .attr("font-size", d => d.fontSize)
                   .attr("font-family", d => d.font)
                   .attr("text-anchor", "middle")
-                  .attr("alignment-baseline", "center")
+                  .attr("dominant-baseline", "middle")
                   .attr("x", d => d.x)
                   .attr("y", d => d.y)
                   .attr("semGroup", d => d.semGroup)
@@ -111,7 +115,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                     .attr("font-size", newWord.fontSize)
                     .attr("font-family", newWord.font)
                     .attr("text-anchor", "middle") //important
-                    .attr("fill", d3.hsl(color.h, color.s, lightnessScale(newWord.value)))
+                    .attr("fill", d3.hsl(color.h, color.s, lightnessScale(newWord.frequency)))
                     .attr("x", newWord.x) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
                     .attr("y", newWord.y)
                     .attr("cursor", "pointer")
@@ -120,6 +124,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 })*/
                 .on("end", function() //when cloud generation is finished, create text in svg element
                 {
+                    console.log(words);
                     let size = this.size();
 
                     words.forEach(function(d) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
@@ -134,7 +139,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                         .attr("font-size", d => d.fontSize)
                         .attr("font-family", d => d.font)
                         .attr("text-anchor", "middle") //important
-                        .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.value)))
+                        .attr("fill", d => d3.hsl(color.h, color.s, lightnessScale(d.frequency)))
                         .attr("x", d => d.x)
                         .attr("y", d => d.y)
                         .attr("cursor", "pointer")
@@ -145,7 +150,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 });
 
                 words.forEach(function(d){
-                  d.fontSize = sizeScale(d.value);
+                  d.fontSize = sizeScale(d.frequency);
                 });
     
                 cloud.start();
@@ -160,7 +165,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .attr('id', 'wordFreqTooltipBackground')
                 .attr('x', 0)
                 .attr('y', 0)
-                .attr('width', 150)
+                .attr('width', 110)
                 .attr('height', 20)
                 .attr('fill', 'white')
                 .attr('stroke', 'black')
@@ -171,23 +176,22 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
                 .attr('font-size', '16')
                 .attr('x', 0)
                 .attr('y', 0)
-                .attr('width', 150)
+                .attr('width', 110)
                 .attr('height', 10)
                 .attr('border-radius', '3')
                 .attr('display', 'none');
 
             function showWordFreqTooltip(d)
             {
-              console.log(d);
               d3.select('#wordFreqTooltip')
-                .text("appears "+d.value+" times")
-                .attr('x', d.x+5)
+                .text(d.frequency+" instances")
+                .attr('x', d.x)
                 .attr('y', d.y+20)
                 .attr("text-anchor", "middle")
                 .attr('display', 'block');
               //d.style['font-weight'] = 'bold';
               d3.select("#wordFreqTooltipBackground")
-                .attr('x', d.x-75)
+                .attr('x', d.x-55)
                 .attr('y', d.y+5)
                 .attr('display', 'block');
             }

@@ -99,7 +99,7 @@ define(['app'], function(app)
     while(app.extraWords.length>0 && i<numToAdd)
     {
       let word = app.extraWords.shift(); //remove items from app's list of "extra words" as they get added to scroll box
-      document.getElementById("extraWordsList").innerHTML+="<li>"+word.text+", appears "+word.frequency+" times</li>";
+      document.getElementById("extraWordsList").innerHTML+="<li>"+word.text+" : "+word.frequency+" instances</li>";
       i++;
     }
   }
