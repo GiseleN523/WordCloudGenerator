@@ -1,7 +1,20 @@
 //this is our word cloud functionality that we could import into Observable
-define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
+
+//playing with semantic grouping
+//import { wordVecs } from './modules/wordvecs10000.js';
+//const vecs = require("wordvecs10000.js");
+//let wordVecs = JSON.parse(vecs);
+// require(['wordvecs10000.js'], function (vecs) {
+//   let wordVecs = JSON.parse(vecs);
+//   console.log(wordVecs['queen'])
+// });
+
+define(['d3.layout.cloud', 'd3', 'wordvecs10000'], function(d3cloud, d3, vecs)
 {
-    let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
+  //practicing semantic things
+  vectsDict = vecs.getVecs();
+  
+  let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
 
     return {
         stopWords : defaultStop.split(" "), 
@@ -284,7 +297,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     function parseText(textStr, stopWords, stopWordPref) 
     {
     
-        let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
+        let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' '); //condense into one split
 
         let cleanWords = words.map(word => word.replace(/[;:\[\]()“”."!?,—*]/g, "")) //dashes should convert to space not empty str
         cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
@@ -302,7 +315,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         })
         let textArr = Object.keys(wordsDict)
         let freqArr = Object.values(wordsDict)
-        console.log(Object.keys(wordsDict).length)
+        
         let wordsFreq = []
         for(let i = 0; i < textArr.length; i++){
           let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
@@ -318,7 +331,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         let i = 0;
         wordsFreq.forEach(function(wordObj) {
           if(wordObj.text.toLowerCase() === 'constructor') {
-            console.log(wordObj.text.toLowerCase() + '1')
             indDict[wordObj.text.toLowerCase() + '1'] = i;
           }
           indDict[wordObj.text] = i;
@@ -326,14 +338,9 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         })
         toSpl = [];
 
-        //debug
-        console.log(wordsFreq.length)
-        console.log(Object.keys(indDict).length)
-
         wordsFreq.forEach(function(wordObj) {
           let findMatch = -1;
           if(wordObj.text.toLowerCase() in indDict) {
-            console.log(wordObj.text.toLowerCase())
             if(wordObj.text.toLowerCase() === 'constructor') {
               findMatch = indDict['constructor1'] ;
             }
@@ -341,10 +348,6 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
               findMatch = indDict[wordObj.text.toLowerCase()] ;
             }
           }
-
-          //debug
-          console.log(findMatch)
-          console.log(wordsFreq.length)
 
           let matchFreq = -1;
           if(findMatch !== -1) {
