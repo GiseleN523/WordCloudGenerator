@@ -213,7 +213,7 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
     
         let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' ');
 
-        let cleanWords = words.map(word => word.replace(/[;:\[\]()“”."!?,—]/g, "")) //dashes should convert to space not empty str
+        let cleanWords = words.map(word => word.replace(/[;:\[\]()“”."!?,—*]/g, "")) //dashes should convert to space not empty str
         cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
         let wordsDict = {}
         cleanWords.forEach(function(c) {
@@ -244,16 +244,34 @@ define(['d3.layout.cloud', 'd3'], function(d3cloud, d3)
         indDict = {}
         let i = 0;
         wordsFreq.forEach(function(wordObj) {
+          if(wordObj.text.toLowerCase() === 'constructor') {
+            console.log(wordObj.text.toLowerCase() + '1')
+            indDict[wordObj.text.toLowerCase() + '1'] = i;
+          }
           indDict[wordObj.text] = i;
           i++;
         })
         toSpl = [];
 
+        //debug
+        console.log(wordsFreq.length)
+        console.log(Object.keys(indDict).length)
+
         wordsFreq.forEach(function(wordObj) {
           let findMatch = -1;
           if(wordObj.text.toLowerCase() in indDict) {
-            findMatch = indDict[wordObj.text.toLowerCase()] ;
+            console.log(wordObj.text.toLowerCase())
+            if(wordObj.text.toLowerCase() === 'constructor') {
+              findMatch = indDict['constructor1'] ;
+            }
+            else {
+              findMatch = indDict[wordObj.text.toLowerCase()] ;
+            }
           }
+
+          //debug
+          console.log(findMatch)
+          console.log(wordsFreq.length)
 
           let matchFreq = -1;
           if(findMatch !== -1) {
