@@ -9,13 +9,25 @@
 //   console.log(wordVecs['queen'])
 // });
 
-define(['d3.layout.cloud', 'd3', 'wordvecs10000'], function(d3cloud, d3, vecs)
+define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d3, vecs, kmeans)
 {
   //practicing semantic things
   vectsDict = vecs.getVecs();
+  vectsInd = Object.keys(vectsDict)
+  vectsArr = Object.values(vectsDict)
+
+  //fix import of kmeans -- curr object not fn?
+  // kmeans(vectsArr, 5, function(err, res) {
+  //   if (err) throw new Error(err)
+
+  //   else {
+  //     console.log(res)
+  //   }
+})
   
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
 
+  //something up with next line?
     return {
         stopWords : defaultStop.split(" "), 
         extraWords : [], //words that aren't stop words but weren't included in the cloud for whatever reason
