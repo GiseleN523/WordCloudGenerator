@@ -10,12 +10,23 @@
 // ----------
 
 //Expose our library to be called externally
-module.exports = function(vector, k, callback) { 
-    if (!vector || !k || !callback) throw new Error(
-            "Provide 3 arguments: callback, vector, clusters")
+
+define (function() {
+    return {
+        getKmeans: function(vector, k, callback) { 
+            if (!vector || !k || !callback) throw new Error(
+                    "Provide 3 arguments: callback, vector, clusters")
+            
+            return new Kmeans(vector, k, callback)
+        }
+    }
+})
+// define (function(vector, k, callback) { 
+//     if (!vector || !k || !callback) throw new Error(
+//             "Provide 3 arguments: callback, vector, clusters")
     
-    return new Kmeans(vector, k, callback)
-}
+//     return new Kmeans(vector, k, callback)
+// })
 
 // Initialize
 // ----------

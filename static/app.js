@@ -11,23 +11,18 @@
 
 define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d3, vecs, kmeans)
 {
-  //practicing semantic things
+  // practicing semantic things
   vectsDict = vecs.getVecs();
-  vectsInd = Object.keys(vectsDict)
+  // vectsInd = Object.keys(vectsDict)
   vectsArr = Object.values(vectsDict)
+  // for(let i = 0; i < vectsArr.length; i++) {
+  //   vectsArr[i].push(i)
+  // }
+  
 
-  //fix import of kmeans -- curr object not fn?
-  // kmeans(vectsArr, 5, function(err, res) {
-  //   if (err) throw new Error(err)
-
-  //   else {
-  //     console.log(res)
-  //   }
-})
   
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
 
-  //something up with next line?
     return {
         stopWords : defaultStop.split(" "), 
         extraWords : [], //words that aren't stop words but weren't included in the cloud for whatever reason
@@ -247,7 +242,6 @@ define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d
                 })*/
                 .on("end", function() //when cloud generation is finished, create text in svg element
                 {
-                    console.log(words);
                     let size = this.size();
 
                     words.forEach(function(d) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
@@ -333,7 +327,7 @@ define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d
         
     function parseText(textStr, stopWords, stopWordPref) 
     {
-    
+
         let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' '); //condense into one split
 
         let cleanWords = words.map(word => word.replace(/[;:\[\]()“”."!?,—*]/g, "")) //dashes should convert to space not empty str
@@ -407,7 +401,33 @@ define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d
           wordsFreq.splice(duplInd, 1)
         })
 
-        return wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
+        wordsFreq = wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
+
+        //testing kmeans
+        toCluster = [] // vectsArr //eventually change to []
+        finInds = []
+        rareWrds = []
+        wordsFreq.forEach(function(wordObj) {
+          if(wordObj.text in vectsDict) {
+            toCluster.push(vectsDict[wordObj.text])
+            finInds.push({i: wordObj.text})
+          }
+          else {
+            rareWrds.push(vectsDict[wordObj.text])
+          }
+        })
+        for(i = 0; i < toCluster.length; i++) {
+          toCluster[i].push(i)
+        }
+        kmeans.getKmeans(toCluster, 4, function(err, res) {
+          if (err) throw new Error(err)
+      
+          else {
+            console.log(res)
+          }
+        })
+        //end testing kmeans
+        return wordsFreq
     }
 
 });
