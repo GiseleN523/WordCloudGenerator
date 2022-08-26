@@ -376,18 +376,11 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             wordObj.frequency += matchFreq
             toSpl.push(findMatch)
           }
-          let thisFreq = wordObj.frequency;
-          if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
-            if(thisFreq > wordsFreq[findMatch].frequency) {
-              wordObj.frequency += matchFreq
-              toSpl.push(findMatch)
-            }
-            else if (thisFreq <= matchFreq) {
-              wordsFreq[findMatch].frequency += thisFreq
-              toSpl.push(wordsFreq.indexOf(wordObj))
-            }
-          } 
-        }
+          else if (thisFreq <= matchFreq) {
+            wordsFreq[findMatch].frequency += thisFreq
+            toSpl.push(wordsFreq.indexOf(wordObj))
+          }
+        } 
       })
         
         toSpl.forEach(function(duplInd) {
