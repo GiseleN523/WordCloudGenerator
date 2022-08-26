@@ -1,25 +1,7 @@
 //this is our word cloud functionality that we could import into Observable
 
-//playing with semantic grouping
-//import { wordVecs } from './modules/wordvecs10000.js';
-//const vecs = require("wordvecs10000.js");
-//let wordVecs = JSON.parse(vecs);
-// require(['wordvecs10000.js'], function (vecs) {
-//   let wordVecs = JSON.parse(vecs);
-//   console.log(wordVecs['queen'])
-// });
-
-define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d3, vecs, kmeans)
+define(['d3.layout.cloud', 'd3','parser'], function(d3cloud, d3, parser)
 {
-  // practicing semantic things
-  vectsDict = vecs.getVecs();
-  // vectsInd = Object.keys(vectsDict)
-  vectsArr = Object.values(vectsDict)
-  // for(let i = 0; i < vectsArr.length; i++) {
-  //   vectsArr[i].push(i)
-  // }
-  
-
   
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
 
@@ -40,7 +22,7 @@ define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d
         circleBoundingPref : false,
         createCloud : function(wordsRaw)
         {
-            wordsParsed = parseText(wordsRaw, this.stopWords, this.stopWordPref);
+            wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref);
             let words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
             while(words.length>0 && (words[words.length-1].frequency<=this.minCountPref || (words.length<wordsParsed.length && words[words.length-1].frequency === wordsParsed[words.length].frequency)))
             { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
@@ -324,110 +306,5 @@ define(['d3.layout.cloud', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d
             return svg.node();
         }
     };
-        
-    function parseText(textStr, stopWords, stopWordPref) 
-    {
-
-        let words = textStr.split('\n').join(' ').split('\r').join(' ').split(' '); //condense into one split
-
-        let cleanWords = words.map(word => word.replace(/[;:\[\]()“”."!?,—*]/g, "")) //dashes should convert to space not empty str
-        cleanWords = cleanWords.map(word => word.replace(/[-_–]/g, " "))
-        let wordsDict = {}
-        cleanWords.forEach(function(c) {
-          if(c.length > 0)
-          {
-            if(c in wordsDict) {
-              wordsDict[c]++
-            }
-            else {
-              wordsDict[c] = 1
-            }
-          }
-        })
-        let textArr = Object.keys(wordsDict)
-        let freqArr = Object.values(wordsDict)
-        
-        let wordsFreq = []
-        for(let i = 0; i < textArr.length; i++){
-          let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
-          wordsFreq.push(thisWord)
-        }
-    
-        if(stopWordPref)
-        {
-            wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
-        }
-
-        indDict = {}
-        let i = 0;
-        wordsFreq.forEach(function(wordObj) {
-          if(wordObj.text.toLowerCase() === 'constructor') {
-            indDict[wordObj.text.toLowerCase() + '1'] = i;
-          }
-          indDict[wordObj.text] = i;
-          i++;
-        })
-        toSpl = [];
-
-        wordsFreq.forEach(function(wordObj) {
-          let findMatch = -1;
-          if(wordObj.text.toLowerCase() in indDict) {
-            if(wordObj.text.toLowerCase() === 'constructor') {
-              findMatch = indDict['constructor1'] ;
-            }
-            else {
-              findMatch = indDict[wordObj.text.toLowerCase()] ;
-            }
-          }
-
-          let matchFreq = -1;
-          if(findMatch !== -1) {
-            matchFreq = wordsFreq[findMatch].frequency;
-          }
-          let thisFreq = wordObj.frequency;
-          if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
-            if(thisFreq > wordsFreq[findMatch].frequency) {
-              wordObj.frequency += matchFreq
-              toSpl.push(findMatch)
-            }
-            else if (thisFreq <= matchFreq) {
-              wordsFreq[findMatch].frequency += thisFreq
-              toSpl.push(wordsFreq.indexOf(wordObj))
-            }
-          } 
-        })
-        
-        toSpl.forEach(function(duplInd) {
-          wordsFreq.splice(duplInd, 1)
-        })
-
-        wordsFreq = wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
-
-        //testing kmeans
-        toCluster = [] // vectsArr //eventually change to []
-        finInds = []
-        rareWrds = []
-        wordsFreq.forEach(function(wordObj) {
-          if(wordObj.text in vectsDict) {
-            toCluster.push(vectsDict[wordObj.text])
-            finInds.push({i: wordObj.text})
-          }
-          else {
-            rareWrds.push(vectsDict[wordObj.text])
-          }
-        })
-        for(i = 0; i < toCluster.length; i++) {
-          toCluster[i].push(i)
-        }
-        kmeans.getKmeans(toCluster, 4, function(err, res) {
-          if (err) throw new Error(err)
-      
-          else {
-            console.log(res)
-          }
-        })
-        //end testing kmeans
-        return wordsFreq
-    }
 
 });

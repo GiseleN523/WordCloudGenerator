@@ -44,6 +44,7 @@ function Kmeans (vector, k, callback) {
     //They are taken by averaging each dimension of the vectors
     this.centroids = new Array(k)
     this.cluster = new Array(k) 
+    this.sortedInd = []
 
     //Create centroids and place them randomly because 
     //we don't yet know where the vectors are most concentrated
@@ -87,9 +88,15 @@ Kmeans.prototype.iterate = function (vecArray) {
     }
     //Group each vector to a cluster based upon the 
     //cooresponding centroid
+    vectInd = 0;
+    sorted = {}
+    for(let i = 0; i < this.k; i++) {
+        sorted[i] = []
+    }
     for (i in this.vector) {
         var v = this.vector[i].slice(0)
         var index = this.assignCentroid(v)
+        sorted[index].push(vectInd)
         
         if (!this.cluster[index]) this.cluster[index]=[]
             this.cluster[index].push(v)
@@ -97,7 +104,9 @@ Kmeans.prototype.iterate = function (vecArray) {
         for (var a=0; a<v.length; a++){
             vecArray[index][a]+=v[a] //keep a sum for cluster
         }
+        vectInd++;
     }
+    this.sortedInd = sorted
 
     //Calculate the mean values for each cluster.
     var distance 
