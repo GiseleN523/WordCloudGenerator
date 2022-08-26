@@ -21,11 +21,13 @@
             </div>
             <div>
                 <label for="fontSizePref">Largest Font Size</label>
-                <input type="range" min="20" max="80" id="fontSizePref">
+                <input type="range" min="20" max="80" id="fontSizePref" value="40">
+                <span id="fontSizeLabel">40</span>
             </div>
             <div>
-                <label for="paddingPref">Padding Between Words</label>
-                <input type="range" min="0" max="20" id="paddingPref" value="3">
+                <label for="paddingPref">Padding Between Words (pixels)</label>
+                <input type="range" min="0" max="12" id="paddingPref" value="3">
+                <span id="paddingLabel">3</span>
             </div>
             <div>
                 <label for="stopWordsPref">Don't Include Stop Words</label>
@@ -49,7 +51,7 @@
             </div>
             <div>
                 <label for="rectBoundingPref">Generate Rectangular Bounding Boxes Around Words</label>
-                <input type="checkbox" id="rectBoundingPref" checked>
+                <input type="checkbox" id="rectBoundingPref">
             </div>
             <div>
                 <label for="circleBoundingPref">Generate Circular Bounding Boxes Around Words</label>
@@ -60,6 +62,7 @@
                 <button id="generateButton" type="button">Generate!</button>
             </div>
         </form>
+        <button id="downloadSvgButton">Download svg</button>
         <div id="extraWords">
             Words that didn't make it into your cloud: 
             <span class="tooltip">?<span class="tooltipContent">
@@ -68,7 +71,7 @@
                 <li>Your cloud already had the requested number of words</li><br>
                 <li>Adding these words would have meant other words with the same frequency were left out</li><br>
                 <li>Their font size was too large to fit within the cloud</li></ul>
-            </span></span>
+            </span></span><span id="showAllWordsSpan">Compare to words in your cloud<input type="checkbox" id="showAllWords"></span>
             <ol id='extraWordsList'></ol>
         </div>
     </div>

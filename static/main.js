@@ -4,8 +4,6 @@ define(['app'], function(app)
 
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
 
-  //make file read here maybe or add default to html box
-
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
 
   document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
@@ -42,15 +40,34 @@ define(['app'], function(app)
       reader.onload = function()
       {
         let cloudData = app.createCloud(reader.result);
-        displayCloud(cloudData);
+        console.log(cloudData);
+        displayCloud(app.svg.node());//cloudData);
       };
     }
     else if(!fileUploadLast && textInput.value.length>0)
     {
       let cloudData = app.createCloud(textInput.value);
-      displayCloud(cloudData);
+      displayCloud(app.svg.node());//cloudData);
     }
   }
+
+  document.getElementById("rectBoundingPref").onchange, document.getElementById("circleBoundingPref").onchange = function()
+  {
+    if(document.getElementById("rectBoundingPref").checked || document.getElementById("circleBoundingPref").checked)
+    {
+      document.getElementById("fontSizePref").max = 50;
+      document.getElementById("paddingPref").max = 20;
+    }
+    else
+    {
+      document.getElementById("fontSizePref").max = 80;
+      document.getElementById("paddingPref").max = 10;
+    }
+  }
+
+  document.getElementById("fontSizePref").onchange = () => document.getElementById("fontSizeLabel").innerHTML = document.getElementById("fontSizePref").value;
+
+  document.getElementById("paddingPref").onchange = () => document.getElementById("paddingLabel").innerHTML = document.getElementById("paddingPref").value;
 
   document.getElementById("fileInput").onchange = () => fileUploadLast = true;
 
@@ -83,9 +100,36 @@ define(['app'], function(app)
     }
   };
 
+  document.querySelector("#extraWords input#showAllWords").onchange = function()
+  {
+    let currentNumExtraShown = document.querySelectorAll("#extraWordsList .extraWord").length;
+    document.getElementById("extraWordsList").innerHTML="";
+    if(document.querySelector("#extraWords input#showAllWords").checked)
+    {
+      for(let i=0; i<app.words.length; i++)
+      {
+        document.getElementById("extraWordsList").innerHTML+="<li style='color: gray'>"+app.words[i].text+" : "+app.words[i].frequency+" instances</li>";
+      }
+      for(let i=0; i<currentNumExtraShown; i++)
+      {
+        document.getElementById("extraWordsList").innerHTML+="<li class='extraWord'>"+app.extraWords[i].text+" : "+app.extraWords[i].frequency+" instances</li>";
+      }
+    }
+    else
+    {
+      appendToExtraWordsList(currentNumExtraShown);
+    }
+  }
+
   function displayCloud(cloudData)
   {
     document.getElementById("wordCloudPreview").append(cloudData);
+
+    document.getElementById("downloadSvgButton").style.display = "block";
+    document.getElementById("downloadSvgButton").onclick = function()
+    {
+      
+    };
 
     document.getElementById("extraWords").style.display = "block";
     document.getElementById("extraWordsList").innerHTML = "";
@@ -96,10 +140,11 @@ define(['app'], function(app)
   {
     let i = 0;
     console.log(app.extraWords);
-    while(app.extraWords.length>0 && i<numToAdd)
+    let startingInd = document.getElementById("extraWordsList").children.length;
+    while(i+startingInd<app.extraWords.length && i<numToAdd)
     {
-      let word = app.extraWords.shift(); //remove items from app's list of "extra words" as they get added to scroll box
-      document.getElementById("extraWordsList").innerHTML+="<li>"+word.text+" : "+word.frequency+" instances</li>";
+      let word = app.extraWords[i+startingInd];
+      document.getElementById("extraWordsList").innerHTML+="<li class='extraWord'>"+word.text+" : "+word.frequency+" instances</li>";
       i++;
     }
   }

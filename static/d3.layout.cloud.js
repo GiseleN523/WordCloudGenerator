@@ -59,7 +59,6 @@
           var start = Date.now();
           while (Date.now() - start < timeInterval && ++i < n && timer) { //while time elapsed is less than timeInterval (provided timer exists). i is the index of word to be placed
             var d = data[i];
-            console.log(random())
             d.x = (size[0] * (random() + .5)) >> 1; //set x to a position around the center of the canvas. 
             d.y = (size[1] * (random() + .5)) >> 1; //same for y
             cloudSprite(contextAndRatio, d, data, i); 
@@ -248,6 +247,7 @@
         d = data[di];
         c.save();
         c.font = d.style + " " + d.weight + " " + ~~((d.size + 1) / ratio) + "px " + d.font;
+        console.log(d);
         var w = c.measureText(d.text + "m").width * ratio, //save width and height of the text
             h = d.size << 1;
         if (d.rotate) { //rotate if specified and adjust width and height variables

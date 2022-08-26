@@ -6,7 +6,7 @@ body
 
 form div
 {
-    margin: 2%;
+    margin: 1%;
 }
 
 form div label, #rightContentColumn h3
@@ -17,20 +17,20 @@ form div label, #rightContentColumn h3
     padding-right: 5px;
 }
 
-form button
+button
 {
     background-color: white;
     color: black;
     padding: .5em;
     border-radius: 6px;
     font-size: 110%;
+    cursor: pointer;
 }
 
-form button:hover
+button:hover
 {
     background-color: #dddddd;
     border-radius: 6px;
-    cursor: pointer;
 }
 
 form div input
@@ -105,4 +105,14 @@ form input[type="text"]
 .tooltip:hover .tooltipContent
 {
     visibility: visible;
+}
+
+#showAllWordsSpan
+{
+    padding-left: 3%;
+}
+
+#downloadSvgButton
+{
+    display: none;
 }
