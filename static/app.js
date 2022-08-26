@@ -9,11 +9,18 @@
 //   console.log(wordVecs['queen'])
 // });
 
-define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout.cloud.js', 'd3', 'wordvecs10000'], function(d3cloud, d3, vecs)
+define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout.cloud.js', 'd3', 'wordvecs10000', 'kmeans'], function(d3cloud, d3, vecs, kmeans)
 {
-  //practicing semantic things
+  // practicing semantic things
   vectsDict = vecs.getVecs();
+  // vectsInd = Object.keys(vectsDict)
+  vectsArr = Object.values(vectsDict)
+  // for(let i = 0; i < vectsArr.length; i++) {
+  //   vectsArr[i].push(i)
+  // }
+  
 
+  
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
 
   return {
@@ -369,18 +376,51 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             wordObj.frequency += matchFreq
             toSpl.push(findMatch)
           }
-          else if (thisFreq <= matchFreq) {
-            wordsFreq[findMatch].frequency += thisFreq
-            toSpl.push(wordsFreq.indexOf(wordObj))
-          }
-        } 
+          let thisFreq = wordObj.frequency;
+          if (findMatch !== -1 && wordsFreq[findMatch] !== wordObj) {
+            if(thisFreq > wordsFreq[findMatch].frequency) {
+              wordObj.frequency += matchFreq
+              toSpl.push(findMatch)
+            }
+            else if (thisFreq <= matchFreq) {
+              wordsFreq[findMatch].frequency += thisFreq
+              toSpl.push(wordsFreq.indexOf(wordObj))
+            }
+          } 
+        }
       })
-      
-      toSpl.forEach(function(duplInd) {
-        wordsFreq.splice(duplInd, 1)
-      })
+        
+        toSpl.forEach(function(duplInd) {
+          wordsFreq.splice(duplInd, 1)
+        })
 
-      return wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
-  }
+        wordsFreq = wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
+
+        //testing kmeans
+        toCluster = [] // vectsArr //eventually change to []
+        finInds = []
+        rareWrds = []
+        wordsFreq.forEach(function(wordObj) {
+          if(wordObj.text in vectsDict) {
+            toCluster.push(vectsDict[wordObj.text])
+            finInds.push({i: wordObj.text})
+          }
+          else {
+            rareWrds.push(vectsDict[wordObj.text])
+          }
+        })
+        for(i = 0; i < toCluster.length; i++) {
+          toCluster[i].push(i)
+        }
+        kmeans.getKmeans(toCluster, 4, function(err, res) {
+          if (err) throw new Error(err)
+      
+          else {
+            console.log(res)
+          }
+        })
+        //end testing kmeans
+        return wordsFreq
+    }
 
 });
