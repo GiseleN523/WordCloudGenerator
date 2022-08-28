@@ -29,7 +29,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
             
             let wordsFreq = []
             for(let i = 0; i < textArr.length; i++){
-              let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
+              let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 0} //call function here that determines semantic group
               wordsFreq.push(thisWord)
             }
         
