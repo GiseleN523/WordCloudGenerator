@@ -23,14 +23,12 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         createCloud : function(wordsRaw)
         {
             wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref);
-            console.log(wordsParsed);
             this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
             while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
             { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
                 this.words.pop();
             }
             this.words = this.words.filter(d => d.semGroup>-1);
-            console.log(this.words);
 
           sizeScale = d3.scaleSqrt()
             .domain([0, d3.max(this.words, d => d.frequency)])
@@ -83,42 +81,53 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         let fillerWords = [];
         this.words.forEach(d => fillerWords.push({
             text : fillerStr,
+            realWord : d,
             fontSize : d.fontSize,
             font : d.font,
             frequency : d.frequency,
             semGroup : d.semGroup
           })); //fake words to "trick" d3-cloud into thinking words of the same frequency are all the same dimensions
 
+        fillerWords = this.splitBySemGroup(fillerWords);
+
         let app = this;
-
-        let cloud = d3cloud()
-          .words(fillerWords)
-          .size([this.widthPref, this.heightPref])
-          .font("sans-serif")
-          .rotate(0)
-          .fontSize(d => d.fontSize)
-          .padding(parseInt(this.paddingPref)+2) //so we can have a padding of 1 on the top and bottom
-          .random(() => .5) //important, overrides default placement function in d3-cloud and always starts spiral at center
-          .on("end", function() //when cloud generation is finished, create text in svg element
-          {
-            fillerWords.forEach(function(d)
+        for(let i=0; i<fillerWords.length; i++)
+        {
+          let cloud = d3cloud()
+            .words(fillerWords[i])
+            .size([this.widthPref, this.heightPref])
+            .font("sans-serif")
+            .rotate(0)
+            .fontSize(d => d.fontSize)
+            .padding(parseInt(this.paddingPref)+2) //so we can have a padding of 1 on the top and bottom
+            .random(() => .5) //important, overrides default placement function in d3-cloud and always starts spiral at center
+            .on("end", function() //when cloud generation is finished, create text in svg element
             {
-              let realWord = app.words[fillerWords.indexOf(d)];
-              realWord.x = d.x+app.widthPref/2; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-              realWord.y = d.y+(app.heightPref/2)-(d.fontSize*.45)-1;
-              //realWord.text = d.text;
+              let size = this.size();
+              fillerWords[i].forEach(function(d)
+              {
+                let xAdjust = (i%3)*(size[0]/3)+size[0]/6;
+                let yAdjust = parseInt(i/3)*(size[1]/3)+size[1]/6;
 
-              let context = document.createElement("canvas").getContext("2d");
-              context.font = d.fontSize+"px "+d.font;
-              realWord.width = context.measureText(d.text).width;
-              realWord.x0 = d.x-(d.width/2);
-              realWord.x1 = d.x0*-1;
-              realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+2;
+                let realWord = d.realWord;
+                realWord.x = d.x+xAdjust; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                realWord.y = d.y+yAdjust-(d.fontSize*.45)-1;
+                //realWord.text = d.text;
+
+                let context = document.createElement("canvas").getContext("2d");
+                context.font = d.fontSize+"px "+d.font;
+                realWord.width = context.measureText(d.text).width;
+                realWord.x0 = d.x-xAdjust;
+                realWord.x1 = d.x0*-1;
+                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+2;
+              });
+              if(i==fillerWords.length-1)
+              {
+                app.createSvg();
+              }
             });
-            app.createSvg();
-          });
-        cloud.start();
-
+          cloud.start();
+        }
       },
       setCircleSvg : function()
       {
@@ -150,26 +159,34 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
 
       setSvgWithoutBoundingBox : function()
       {
+        let wordsSplit = this.splitBySemGroup(this.words);
+
         let app = this;
-        let cloud = d3cloud()
-          .words(this.words)
-          .size([this.widthPref, this.heightPref])
-          .font("sans-serif")
-          .rotate(0)
-          .fontSize(d => d.fontSize)
-          .padding(this.paddingPref)
-          .random(() => .5) //important
-          .on("end", function() //when cloud generation is finished, create text in svg element
-          {
-            let size = this.size();
-            app.words.forEach(function(d) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+        for(let i=0; i<wordsSplit.length; i++)
+        {
+          let cloud = d3cloud()
+            .words(wordsSplit[i])
+            .size([this.widthPref, this.heightPref])
+            .font("sans-serif")
+            .rotate(0)
+            .fontSize(d => d.fontSize)
+            .padding(this.paddingPref)
+            .random(() => .5) //important
+            .on("end", function() //when cloud generation is finished, create text in svg element
             {
-              d.x += size[0]/2;
-              d.y += size[1]/2;
+              let size = this.size();
+              wordsSplit[i].forEach(function(d) //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+              {
+                d.x += (i%3)*(size[0]/3)+size[0]/6;
+                d.y += parseInt(i/3)*(size[1]/3)+size[1]/6;
+              });
+              if(i==wordsSplit.length-1)
+              {
+                app.createSvg();
+              }
             });
-            app.createSvg();
-          });
-        cloud.start();
+          cloud.start();
+        };
       },
 
       createSvg : function()
@@ -252,8 +269,6 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .attr('id', 'wordFreqTooltipBackground')
           .attr('x', 0)
           .attr('y', 0)
-          .attr('width', 110)
-          .attr('height', 20)
           .attr('fill', 'white')
           .attr('stroke', 'black')
           .attr('display', 'none');
@@ -263,15 +278,13 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .attr('font-size', '16')
           .attr('x', 0)
           .attr('y', 0)
-          .attr('width', 110)
-          .attr('height', 10)
           .attr('border-radius', '3')
           .attr('display', 'none');
   
         function showWordFreqTooltip(d)
         {
           d3.select('#wordFreqTooltip')
-            .text(d.frequency+" instances")
+            .text(d.text+": "+d.frequency+" instances")
             .attr('x', d.x)
             .attr('y', d.y+25)
             .attr("text-anchor", "middle")
@@ -281,9 +294,16 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           {
             d3.select(d.shapeSvg).attr('stroke-width', '3');
           }
+          let context = document.createElement("canvas").getContext("2d");
+          context.font = document.getElementById("wordFreqTooltip").getAttribute("font-size")+"px sans-serif";
+          let width = context.measureText(document.getElementById("wordFreqTooltip").innerHTML).width;
+          let height = document.getElementById("wordFreqTooltip").getAttribute("font-size");
+          console.log(width+" "+height);
           d3.select("#wordFreqTooltipBackground")
-            .attr('x', d.x-55)
-            .attr('y', d.y+10)
+            .attr('height', parseInt(height)+6)
+            .attr('width', width+6)
+            .attr('x', d.x-width/2-3)
+            .attr('y', d.y+height/2+2)
             .attr('display', 'block');
         }
   
@@ -298,6 +318,15 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           }
           d3.select("#wordFreqTooltipBackground").attr('display', 'none');
         }
+      },
+      splitBySemGroup : function(arr)
+      {
+        let split = [];
+        for(let i=0; i<=d3.max(arr, d => d.semGroup); i++)
+        {
+          split.push(arr.filter(d => d.semGroup==i))
+        }
+        return split;
       }
   };
 });
