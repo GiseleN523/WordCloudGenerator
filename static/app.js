@@ -94,7 +94,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .font("sans-serif")
           .rotate(0)
           .fontSize(d => d.fontSize)
-          .padding(parseInt(this.paddingPref)+2) //so we can have a padding of 2 on the top and bottom
+          .padding(parseInt(this.paddingPref)+2) //so we can have a padding of 1 on the top and bottom
           .random(() => .5) //important, overrides default placement function in d3-cloud and always starts spiral at center
           .on("end", function() //when cloud generation is finished, create text in svg element
           {

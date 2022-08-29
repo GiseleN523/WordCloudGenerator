@@ -1,5 +1,5 @@
 //this is the functionality specific to our site that references html+css and builds on the more generic app.js (which can also be importable into observable)
-define(['app'], function(app)
+define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'], function(app, svgExportJS)
 {
 
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
@@ -128,7 +128,7 @@ define(['app'], function(app)
     document.getElementById("downloadSvgButton").style.display = "block";
     document.getElementById("downloadSvgButton").onclick = function()
     {
-      
+      svgExportJS.downloadSvg(app.svg.node(), "yourwordcloud");
     };
 
     document.getElementById("extraWords").style.display = "block";
