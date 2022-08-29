@@ -29,6 +29,8 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
                 this.words.pop();
             }
+            this.words = this.words.filter(d => d.semGroup>-1);
+            console.log(this.words);
 
           sizeScale = d3.scaleSqrt()
             .domain([0, d3.max(this.words, d => d.frequency)])
@@ -120,8 +122,13 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
       },
       setCircleSvg : function()
       {
+        let wordsBySemGroup = [];
+        for(let i=0; i<=d3.max(this.words, d => d.semGroup); i++)
+        {
+          wordsBySemGroup.push({"children" : this.words.filter(d => d.semGroup==i)})
+        }
         let root = d3.hierarchy({
-          "children" : this.words})
+          "children" : wordsBySemGroup})
           .sum(d => d.hasOwnProperty("frequency") ? d.frequency : 0);
 
         let pack = d3.pack()
