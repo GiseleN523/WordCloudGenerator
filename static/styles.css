@@ -108,10 +108,16 @@ form input[type="text"]
     visibility: visible;
 }
 
+.tooltipContent li
+{
+    margin-bottom: 5px;
+}
+
 .tooltipContent a
 {
     text-decoration: none;
     color: black;
+    cursor: pointer;
 }
 
 .tooltipContent a:hover

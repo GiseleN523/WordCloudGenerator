@@ -201,7 +201,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         {
           lightnessScales.push(d3.scaleLinear()
             .domain([0, d3.max(this.words, d => d.frequency)])
-            .range(this.lightnessPref ? [.9, .5] : [hslColors[i].l, hslColors[i].l]));
+            .range(this.lightnessPref ? [.8, .4] : [hslColors[i].l, hslColors[i].l]));
         };
 
         if(this.circleBoundingPref)
