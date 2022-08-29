@@ -22,8 +22,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'],
     app.colorPref = Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
-    console.log(app.circleBoundingPref);
-
+  
     let fileInput = document.getElementById("fileInput");
     let textInput = document.getElementById("rawTextInput");
 
@@ -39,15 +38,14 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'],
       reader.readAsText(file);
       reader.onload = function()
       {
-        let cloudData = app.createCloud(reader.result);
-        console.log(cloudData);
-        displayCloud(app.svg.node());//cloudData);
+        app.createCloud(reader.result);
+        displayCloud(app.svg.node());
       };
     }
     else if(!fileUploadLast && textInput.value.length>0)
     {
-      let cloudData = app.createCloud(textInput.value);
-      displayCloud(app.svg.node());//cloudData);
+      app.createCloud(textInput.value);
+      displayCloud(app.svg.node());
     }
   }
 
@@ -69,6 +67,18 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'],
 
   document.getElementById("paddingPref").onchange = () => document.getElementById("paddingLabel").innerHTML = document.getElementById("paddingPref").value;
 
+  document.getElementById("semanticPref").onchange = function()
+  {
+    if(document.getElementById("semanticPref").checked)
+    {
+      document.getElementById("groupColorPrefs").style="display: block";
+    }
+    else
+    {
+      document.getElementById("groupColorPrefs").style="display: none";
+    }
+  }
+  
   document.getElementById("fileInput").onchange = () => fileUploadLast = true;
 
   document.getElementById("rawTextInput").onchange = (e) => e.target.value.length>0 ? fileUploadLast = false : fileUploadLast = true;

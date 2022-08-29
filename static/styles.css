@@ -107,11 +107,6 @@ form input[type="text"]
     visibility: visible;
 }
 
-#showAllWordsSpan
-{
-    padding-left: 3%;
-}
-
 #downloadSvgButton
 {
     display: none;

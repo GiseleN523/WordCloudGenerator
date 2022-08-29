@@ -29,7 +29,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
             
             let wordsFreq = []
             for(let i = 0; i < textArr.length; i++){
-              let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 1} //call function here that determines semantic group
+              let thisWord = {text: textArr[i], frequency: freqArr[i], semGroup: 0} //call function here that determines semantic group
               wordsFreq.push(thisWord)
             }
         
@@ -86,22 +86,22 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
             })
             wordsFreq = wordsFreq.sort((e, f) => (e.frequency <= f.frequency) ? 1 : -1); //sort in descending order
     
-            //clustering fns below -- need organization!! and it worked but now it doesn't :(
+            //clustering fns below -- need organization!! and it worked but now it doesn't :( also fix tokenization apparently
             let toCluster = [] 
-            let finInds = {}
+            //let finInds = {}
             let rareWrds = []
             
             for(let i = 0; i < wordsFreq.length; i++) {  
               if(wordsFreq[i].text.toLowerCase() in vectsDict) {
                 toCluster.push(vectsDict[wordsFreq[i].text.toLowerCase()])
-                finInds[i] = wordsFreq[i].text
+                //finInds[i] = wordsFreq[i].text
               }
               else {
                 rareWrds.push(wordsFreq[i].text)
               }
             }
             
-            
+            //make kmeans object using array of words found in wordvecs 
             groups = kmeans.getKmeans(toCluster, k, function(err, res) {
               if (err) throw new Error(err)
           
@@ -109,33 +109,35 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
                 //console.log(res)
               }
             })
-            let indClusts = groups.sortedInd
-            // let clustByWord = {} //upon return: make a functional cluster lookup here?
-            //this is n^2 obvi. any workarounds?
+            let indClusts = groups.sortedInd //dictionary mapping array of vector indices according to toCluster to their index
+            
             console.log(indClusts) //indexed groups
-            for(let i = 0; i < k; i++) {
-              for(let j = 0; j < indClusts[i].length; j++) {
-                // console.log(indClusts[i][j])
-                // console.log(finInds)
-                indClusts[i][j] = finInds[indClusts[i][j]]
-                //console.log(indClusts[i][j])
-                // clustByWord[indClusts[i][j].text] = i  
+            ind = 0
+            wordsFreq.forEach(function(wordObj) {
+              if(wordObj.text.toLowerCase() in vectsDict) {
+                group = indClusts[ind]
+                wordObj.semGroup = group
+                if (typeof group === 'undefined') {
+                  wordObj.semGroup = -2
+                }
               }
-            }
+              else {
+                //alternate semgrouping function for wordFreq objs not in toCluster will go here, placeholder below:
+                wordObj.semGroup = -1
+              }
+              ind++
+            })
+            wordsFreq.forEach(function(wordObj) {
+              console.log(wordObj.text)
+              console.log(wordObj.semGroup)
+            })
     
-            //how useful is the preprocessing?
+            //how useful is the preprocessing? there are tokenization errors!
             console.log(toCluster.length)
             console.log(wordsFreq.length)
             console.log(rareWrds.length)
             console.log(rareWrds)
     
-            //end testing kmeans
-            
-            // wordsFreq.forEach(function(wordObj) {
-            //   if(wordObj.text.toLowerCase() in vectsDict) {
-            //     word
-            //   }
-            // })
             return wordsFreq
         }
     }
