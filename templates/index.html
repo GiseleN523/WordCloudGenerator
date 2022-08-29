@@ -13,24 +13,46 @@
         <form>
             <div>
                 <label for="numWordsPref">Maximum Number of Words to Include</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    
+                </span></span>
                 <input type="text" id="numWordsPref" value="100">
             </div>
             <div>
                 <label for="minCountPref">Only Include Words With Word Counts Above</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    
+                </span></span>
                 <input type="text" id="minCountPref" value="1">
             </div>
             <div>
                 <label for="fontSizePref">Largest Font Size</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    <a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
+                        Position, size, and color brightness are good ways of encoding ordinal (ordered) data such as, in this case, word count
+                    </a>
+                </span></span>
                 <input type="range" min="20" max="80" id="fontSizePref" value="40">
                 <span id="fontSizeLabel">40</span>
             </div>
             <div>
                 <label for="paddingPref">Padding Between Words (pixels)</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                <a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
+                    Layouts with white space tend to be preferred over more tightly packed, less organized looking layouts
+                </a>
+                <a href="https://drive.google.com/file/d/1VoLi7vJyOhetQ9VPU0PK0KoyO8cjaNyw/view">
+                    It is possible that designs which cluster words more closely could cause people to overlook or struggle to read some words, based on experiments dealing with crowding of letters
+                </a>
+                </span></span>
                 <input type="range" min="0" max="12" id="paddingPref" value="3">
                 <span id="paddingLabel">3</span>
             </div>
             <div>
                 <label for="stopWordsPref">Don't Include Stop Words</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    
+                </span></span>
                 <input type="checkbox" id="stopWordsPref" checked>
             </div>
             <div id="stopWordsBoxPrefDiv">
@@ -39,13 +61,40 @@
             </div>
             <div>
                 <label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    <a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
+                        Position, size, and color brightness are good ways of encoding ordinal (ordered) data such as, in this case, word count
+                    </a>
+                </span></span>
                 <input type="checkbox" id="lightnessPref" checked>
             </div>
             <div>
                 <label for="semanticPref">Split Words into Semantic Groups</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    <a href="https://dl.acm.org/doi/10.1007/978-3-642-03655-2_43" target="_blank">
+                        Organizing words thematically can mostly eliminate a bias that causes people to pay more attention to the upper-left-hand words
+                    </a>
+                    <a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
+                        Visually subdividing and semantically organizing words is effective in improving people's accuracy with time-constrained, category understanding tasks
+                    </a>
+                    <a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
+                        Layouts with white space tend to be preferred over more tightly packed, less organized looking layouts
+                    </a>
+                    <a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
+                        Position, hue, and shape are good ways to encode nominal (categorical) data such as, in this case, topic
+                    </a>
+                </span></span>
                 <input type="checkbox" id="semanticPref" checked>
+                <span class="tooltip">?<span class="tooltipContent">
+                    <a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
+                        According to the Gestalt school of psychology, objects that are close together or that are similar are seen as a group 
+                    </a>
+                </span>
             </div>
-            <div id="colorPref"><label for="colorPref">Color For Each Word Group:</label><br>
+            <div id="colorPref"><label for="colorPref">Color For Each Word Group:</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    
+                </span></span><br>
                 <label>Group 1 Color</label>
                 <input type="color" value="#ff0000">
                 <span id="groupColorPrefs">
@@ -69,10 +118,16 @@
             </div>
             <div>
                 <label for="rectBoundingPref">Generate Rectangular Bounding Boxes Around Words</label>
-                <input type="checkbox" id="rectBoundingPref">
+                <span class="tooltip">?<span class="tooltipContent">
+                    
+                </span></span>
+                <input type="checkbox" id="rectBoundingPref" checked>
             </div>
             <div>
                 <label for="circleBoundingPref">Generate Circular Bounding Boxes Around Words</label>
+                <span class="tooltip">?<span class="tooltipContent">
+                    
+                </span></span>
                 <input type="checkbox" id="circleBoundingPref">
             </div>
             <div>

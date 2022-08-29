@@ -85,8 +85,9 @@ form input[type="text"]
  .tooltip
 {
     border: 1px solid black;
+    font-size: 60%;
     border-radius: 2em;
-    padding: .25em .5em;
+    padding: .1em .3em;
     cursor: pointer;
 }
 
@@ -97,7 +98,7 @@ form input[type="text"]
     padding: 1em;
     border-radius: 1em;
     border: 1px solid black;
-    font-size: 85%;
+    font-size: 130%;
     position: absolute;
     z-index: 1;
 }
@@ -105,6 +106,17 @@ form input[type="text"]
 .tooltip:hover .tooltipContent
 {
     visibility: visible;
+}
+
+.tooltipContent a
+{
+    text-decoration: none;
+    color: black;
+}
+
+.tooltipContent a:hover
+{
+    color: #666666;
 }
 
 #downloadSvgButton

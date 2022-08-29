@@ -72,8 +72,9 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         context.font = widestWord.fontSize+"px "+widestWord.font;
 
         let widestWordWidth = context.measureText(widestWord.text).width;
+        console.log(widestWord);
         let fillerStr="";
-        while(context.measureText(fillerStr).width<widestWordWidth)
+        while(context.measureText(fillerStr).width<widestWordWidth+8)
         {
           fillerStr+=String.fromCharCode(9608);
         }
@@ -111,7 +112,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
 
                 let realWord = d.realWord;
                 realWord.x = d.x+xAdjust; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                realWord.y = d.y+yAdjust-(d.fontSize*.45)-1;
+                realWord.y = d.y+yAdjust-(d.fontSize*.45)-(d.fontSize*.1);
                 //realWord.text = d.text;
 
                 let context = document.createElement("canvas").getContext("2d");
@@ -119,7 +120,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 realWord.width = context.measureText(d.text).width;
                 realWord.x0 = d.x-xAdjust;
                 realWord.x1 = d.x0*-1;
-                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+2;
+                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
               });
               if(i==fillerWords.length-1)
               {
@@ -250,7 +251,19 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .attr("alignment-baseline", "middle")
           .attr("fill", d => (this.circleBoundingPref || this.rectBoundingPref) ? "black" : d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
           .attr("x", d => d.x)
-          .attr("y", d => d.y)
+          .attr("y", function(d)
+          {
+            if(this.rectBoundingPref)
+            {
+              let context = document.createElement("canvas").getContext("2d");
+              context.font = d.fontSize+"px "+d.font;
+              realWord.width = context.measureText(d.text).width;
+            }
+            else
+            {
+              return d.y;
+            }
+          })
           .attr("cursor", function(d){
             d.textSvg = this; //save text in word object--not sure where else to do it
             return "pointer";
@@ -267,18 +280,14 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
   
         this.svg.append('rect')
           .attr('id', 'wordFreqTooltipBackground')
-          .attr('x', 0)
-          .attr('y', 0)
           .attr('fill', 'white')
           .attr('stroke', 'black')
+          .attr('rx', '5')
           .attr('display', 'none');
   
         this.svg.append('text')
           .attr('id', 'wordFreqTooltip')
           .attr('font-size', '16')
-          .attr('x', 0)
-          .attr('y', 0)
-          .attr('border-radius', '3')
           .attr('display', 'none');
   
         function showWordFreqTooltip(d)
@@ -298,7 +307,6 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           context.font = document.getElementById("wordFreqTooltip").getAttribute("font-size")+"px sans-serif";
           let width = context.measureText(document.getElementById("wordFreqTooltip").innerHTML).width;
           let height = document.getElementById("wordFreqTooltip").getAttribute("font-size");
-          console.log(width+" "+height);
           d3.select("#wordFreqTooltipBackground")
             .attr('height', parseInt(height)+6)
             .attr('width', width+6)
