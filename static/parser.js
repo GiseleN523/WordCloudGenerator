@@ -2,7 +2,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
    
     vectsDict = vecs.getVecs();
     vectsArr = Object.values(vectsDict);
-    k = 9;
+    k = 5;
 
     return { parseText: function(textStr, stopWords, stopWordPref) 
         {
