@@ -22,7 +22,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         circleBoundingPref : false,
         createCloud : function(wordsRaw)
         {
-            wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref);
+            wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
             this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
             while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
             { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
