@@ -129,3 +129,8 @@ form input[type="text"]
 {
     display: none;
 }
+
+#singleColorPref
+{
+    display: none;
+}

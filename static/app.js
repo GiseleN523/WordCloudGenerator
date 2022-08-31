@@ -22,14 +22,14 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         circleBoundingPref : false,
         createCloud : function(wordsRaw)
         {
-            wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
-            this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
-            while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
-            { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
-                this.words.pop();
-            }
-            this.words = this.words.filter(d => d.semGroup>-1);
-
+          wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
+          this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
+          while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
+          { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
+              this.words.pop();
+          }
+          this.words = this.words.filter(d => d.semGroup>-1);
+          
           sizeScale = d3.scaleSqrt()
             .domain([0, d3.max(this.words, d => d.frequency)])
             .range([0, this.fontSizePref])
@@ -122,24 +122,31 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
               });
               if(app.semanticPref && i==fillerWords.length-1)
               {
-                let xDirections = [-1, 1, 0, -1, 1];
-                let yDirections = [-1, -1, 0, 1, 1]
-                let collisions = [true, true, true, true, true];
-                let midGroup = fillerWords[parseInt(fillerWords.length/2)];
+                let xDirections = [-1, 1, -1, 1];
+                let yDirections = [-1, -1, 1, 1]
+                let collisions = [true, true, true, true];
+                let midGroup = fillerWords[d3.maxIndex(fillerWords, function(p)
+                {
+                  let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
+                  let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
+                  let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+                  return radius;
+                })];
+                fillerWords.splice(fillerWords.indexOf(midGroup), 1);
                 let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1)] //bounds of the center group (in this case, the 3rd)
                 let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1)]
                 let midGroupRadius = Math.max(midGroupBoundsX[1]-midGroupBoundsX[0], midGroupBoundsY[1]-midGroupBoundsY[0])/2;
                 let midGroupCenter = [(midGroupBoundsX[0]+midGroupBoundsX[1])/2, (midGroupBoundsY[0]+midGroupBoundsY[1])/2];
                 while(collisions.includes(true))
                 {
-                  collisions = [false, false, false, false, false];
+                  collisions = [false, false, false, false];
                   for(let i=0; i<fillerWords.length; i++)
                   {
                     let boundsX = [d3.min(fillerWords[i], d => d.x+d.x0), d3.max(fillerWords[i], d => d.x+d.x1)];
                     let boundsY = [d3.min(fillerWords[i], d => d.y+d.y0), d3.max(fillerWords[i], d => d.y+d.y1)];
                     let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
                     let center = [(boundsX[0]+boundsX[1])/2, (boundsY[0]+boundsY[1])/2];
-                    if(fillerWords[i]!=midGroup && midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
+                    if(midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
                     {
                       collisions[i] = true;
                       fillerWords[i].forEach(function(d)
@@ -216,24 +223,31 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
               });
               if(app.semanticPref && i==wordsSplit.length-1)
               {
-                let xDirections = [-1, 1, 0, -1, 1];
-                let yDirections = [-1, -1, 0, 1, 1]
-                let collisions = [true, true, true, true, true];
-                let midGroup = wordsSplit[parseInt(wordsSplit.length/2)];
+                let xDirections = [-1, 1, -1, 1];
+                let yDirections = [-1, -1, 1, 1]
+                let collisions = [true, true, true, true];
+                let midGroup = wordsSplit[d3.maxIndex(wordsSplit, function(p)
+                {
+                  let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
+                  let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
+                  let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+                  return radius;
+                })];
+                wordsSplit.splice(wordsSplit.indexOf(midGroup), 1);
                 let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1)] //bounds of the center group (in this case, the 3rd)
                 let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1)]
                 let midGroupRadius = Math.max(midGroupBoundsX[1]-midGroupBoundsX[0], midGroupBoundsY[1]-midGroupBoundsY[0])/2;
                 let midGroupCenter = [(midGroupBoundsX[0]+midGroupBoundsX[1])/2, (midGroupBoundsY[0]+midGroupBoundsY[1])/2];
                 while(collisions.includes(true))
                 {
-                  collisions = [false, false, false, false, false];
+                  collisions = [false, false, false, false];
                   for(let i=0; i<wordsSplit.length; i++)
                   {
                     let boundsX = [d3.min(wordsSplit[i], d => d.x+d.x0), d3.max(wordsSplit[i], d => d.x+d.x1)];
                     let boundsY = [d3.min(wordsSplit[i], d => d.y+d.y0), d3.max(wordsSplit[i], d => d.y+d.y1)];
                     let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
                     let center = [(boundsX[0]+boundsX[1])/2, (boundsY[0]+boundsY[1])/2];
-                    if(wordsSplit[i]!=midGroup && midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
+                    if(midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
                     {
                       collisions[i] = true;
                       wordsSplit[i].forEach(function(d)
@@ -307,15 +321,6 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             .on('mouseout', (event, d) => hideWordFreqTooltip(d));
         }
 
-        /*this.svg.selectAll("rect")
-            .data(this.wordsSplit)
-            .join("rect")
-            .attr("x", d => d3.min(d, k => k.x+k.x0))
-            .attr("y", d => d3.min(d, k => k.y+k.y0))
-            .attr("width", d => d3.max(d, k => k.x+k.x1)-d3.max(d, k => k.x+k.x0))
-            .attr("height", d => d3.max(d, k => k.x+k.y1)-d3.max(d, k => k.x+k.y0))
-            .attr("fill", d => "black")*/
-           
         this.svg.selectAll("text")
           .data(this.words)
           .join("text")

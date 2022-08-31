@@ -1,5 +1,5 @@
 //this is the functionality specific to our site that references html+css and builds on the more generic app.js (which can also be importable into observable)
-define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'], function(app, svgExportJS)
+define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 'd3'], function(app, svgExportJS, d3)
 {
 
   let dim = 700; //if changed, must also be changed in styles.css; TODO: connect these two
@@ -7,6 +7,11 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'],
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
 
   document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
+
+  let colorSchemes = [d3.schemeSet1, d3.schemeDark2, d3.schemeTableau10, d3.schemeSet2];
+  let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4"];
+  colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
+  document.getElementById("groupColorPref").innerHTML+='<option value="custom">Custom</option>';
 
   document.getElementById('generateButton').onclick = () => 
   {
@@ -19,7 +24,15 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'],
     app.stopWordPref = document.getElementById('stopWordsPref').checked;
     app.lightnessPref = document.getElementById('lightnessPref').checked;
     app.semanticPref = document.getElementById('semanticPref').checked;
-    app.colorPref = Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
+    //app.colorPref = Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
+    if(app.semanticPref)
+    {
+      app.colorPref = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)];
+    }
+    else
+    {
+      app.colorPref = [document.getElementById("singleColorPref").value];
+    }
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
   
@@ -71,11 +84,13 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'],
   {
     if(document.getElementById("semanticPref").checked)
     {
-      document.getElementById("groupColorPrefs").style="display: block";
+      document.getElementById("singleColorPref").style="display: none";
+      document.getElementById("groupColorPref").style="display: block";
     }
     else
     {
-      document.getElementById("groupColorPrefs").style="display: none";
+      document.getElementById("singleColorPref").style="display: block";
+      document.getElementById("groupColorPref").style="display: none";
     }
   }
   
@@ -118,7 +133,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'],
     {
       for(let i=0; i<app.words.length; i++)
       {
-        document.getElementById("extraWordsList").innerHTML+="<li style='color: gray'>"+app.words[i].text+" : "+app.words[i].frequency+" instances</li>";
+        document.getElementById("extraWordsList").innerHTML+="<li style='color: darkgray'>"+app.words[i].text+" : "+app.words[i].frequency+" instances</li>";
       }
       for(let i=0; i<currentNumExtraShown; i++)
       {
