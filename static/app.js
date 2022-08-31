@@ -107,22 +107,60 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
               let size = this.size();
               fillerWords[i].forEach(function(d)
               {
-                let xAdjust = (i%3)*(size[0]/3)+size[0]/6;
-                let yAdjust = parseInt(i/3)*(size[1]/3)+size[1]/6;
-
+                d.x += size[0]/2;
+                d.y += size[1]/2;
                 let realWord = d.realWord;
-                realWord.x = d.x+xAdjust; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                realWord.y = d.y+yAdjust-(d.fontSize*.45)-(d.fontSize*.1);
-                //realWord.text = d.text;
+                realWord.x = d.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                realWord.y = d.y-(d.fontSize*.45)-(d.fontSize*.1);
 
                 let context = document.createElement("canvas").getContext("2d");
                 context.font = d.fontSize+"px "+d.font;
                 realWord.width = context.measureText(d.text).width;
-                realWord.x0 = d.x-xAdjust;
+                realWord.x0 = d.x-realWord.width/2;
                 realWord.x1 = d.x0*-1;
                 realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
               });
-              if(i==fillerWords.length-1)
+              if(app.semanticPref && i==fillerWords.length-1)
+              {
+                let xDirections = [-1, 1, 0, -1, 1];
+                let yDirections = [-1, -1, 0, 1, 1]
+                let collisions = [true, true, true, true, true];
+                let midGroup = fillerWords[parseInt(fillerWords.length/2)];
+                let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1), 0] //bounds of the center group (in this case, the 3rd)
+                let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1), 0]
+                while(collisions.includes(true))
+                {
+                  collisions = [false, false, false, false, false];
+                  for(let i=0; i<fillerWords.length; i++)
+                  {
+                    let boundsX = [d3.max(fillerWords[i], d => d.x+d.x1), d3.min(fillerWords[i], d => d.x+d.x0), 0];
+                    let boundsY = [d3.max(fillerWords[i], d => d.y+d.y1), d3.min(fillerWords[i], d => d.y+d.y0), 0];
+                    let xShift = (midGroupBoundsX[i%3]-boundsX[i%3])*xDirections[i]>0;
+                    let yShift = (midGroupBoundsY[i%3]-boundsY[i%3])*yDirections[i]>0;
+                    if(xShift || yShift)
+                    {
+                      collisions[i] = true;
+                      fillerWords[i].forEach(function(d)
+                      {
+                        /*if(xShift)
+                        {
+                          d.x += xDirections[i]*5;
+                        }
+                        if(yShift)
+                        {
+                          d.y += yDirections[i]*5;
+                        }*/
+                        d.x += xDirections[i]*5;
+                        d.y += yDirections[i]*5;
+                        d.realWord.x = d.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                        d.realWord.y = d.y-(d.fontSize*.45)-(d.fontSize*.1);
+                      })
+                    }
+                  }
+                }
+                app.createSvg();
+              }
+              else if(!app.semanticPref)
               {
                 app.createSvg();
               }
@@ -161,6 +199,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
       setSvgWithoutBoundingBox : function()
       {
         let wordsSplit = this.splitBySemGroup(this.words);
+        this.splitWord = wordsSplit;
 
         let app = this;
         for(let i=0; i<wordsSplit.length; i++)
@@ -181,14 +220,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 d.x += size[0]/2;
                 d.y += size[1]/2;
               });
-              /*wordsSplit[i].forEach(function(d)
-              {  //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                console.log((i%3)*(size[0]/3)+size[0]/6)
-                console.log(parseInt(i/3)*(size[1]/3)+size[1]/6)
-                d.x += (i%3)*(size[0]/3)+size[0]/6;
-                d.y += parseInt(i/3)*(size[1]/3)+size[1]/6;
-              });*/
-              if(i==wordsSplit.length-1)
+              if(app.semanticPref && i==wordsSplit.length-1)
               {
                 let xDirections = [-1, 1, 0, -1, 1];
                 let yDirections = [-1, -1, 0, 1, 1]
@@ -203,27 +235,31 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                   {
                     let boundsX = [d3.max(wordsSplit[i], d => d.x+d.x1), d3.min(wordsSplit[i], d => d.x+d.x0), 0];
                     let boundsY = [d3.max(wordsSplit[i], d => d.y+d.y1), d3.min(wordsSplit[i], d => d.y+d.y0), 0];
-
-                    console.log(i);
-                    console.log((midGroupBoundsX[i%3]-boundsX[i%3])*xDirections[i]);
-                    console.log((midGroupBoundsY[i%3]-boundsY[i%3])*yDirections[i]);
-                    console.log((midGroupBoundsX[i%3]-boundsX[i%3])*xDirections[i]>0);
-                    console.log((midGroupBoundsY[i%3]-boundsY[i%3])*yDirections[i]>0);
-
-                    if((midGroupBoundsX[i%3]-boundsX[i%3])*xDirections[i]>0 || (midGroupBoundsY[i%3]-boundsY[i%3])*yDirections[i]>0)
+                    let xShift = (midGroupBoundsX[i%3]-boundsX[i%3])*xDirections[i]>0;
+                    let yShift = (midGroupBoundsY[i%3]-boundsY[i%3])*yDirections[i]>0;
+                    if(xShift || yShift)
                     {
                       collisions[i] = true;
-                      console.log(i);
-                      console.log(wordsSplit);
-                      console.log(wordsSplit[i]);
                       wordsSplit[i].forEach(function(d)
                       {
+                        /*if(xShift)
+                        {
+                          d.x += xDirections[i]*5;
+                        }
+                        if(yShift)
+                        {
+                          d.y += yDirections[i]*5;
+                        }*/
                         d.x += xDirections[i]*5;
                         d.y += yDirections[i]*5;
                       })
                     }
                   }
                 }
+                app.createSvg();
+              }
+              else if(!app.semanticPref)
+              {
                 app.createSvg();
               }
             });
@@ -282,7 +318,16 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             .on('mouseover', (event, d) => showWordFreqTooltip(d))
             .on('mouseout', (event, d) => hideWordFreqTooltip(d));
         }
-  
+
+        /*this.svg.selectAll("rect")
+            .data(this.wordsSplit)
+            .join("rect")
+            .attr("x", d => d3.min(d, k => k.x+k.x0))
+            .attr("y", d => d3.min(d, k => k.y+k.y0))
+            .attr("width", d => d3.max(d, k => k.x+k.x1)-d3.max(d, k => k.x+k.x0))
+            .attr("height", d => d3.max(d, k => k.x+k.y1)-d3.max(d, k => k.x+k.y0))
+            .attr("fill", d => "black")*/
+           
         this.svg.selectAll("text")
           .data(this.words)
           .join("text")
