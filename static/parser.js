@@ -156,7 +156,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
             }
             else {
               wordsFreq.forEach(function(wordObj) {
-                wordObj.semGroup = 1
+                wordObj.semGroup = 0
               })
             }
     
