@@ -126,32 +126,26 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 let yDirections = [-1, -1, 0, 1, 1]
                 let collisions = [true, true, true, true, true];
                 let midGroup = fillerWords[parseInt(fillerWords.length/2)];
-                let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1), 0] //bounds of the center group (in this case, the 3rd)
-                let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1), 0]
+                let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1)] //bounds of the center group (in this case, the 3rd)
+                let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1)]
+                let midGroupRadius = Math.max(midGroupBoundsX[1]-midGroupBoundsX[0], midGroupBoundsY[1]-midGroupBoundsY[0])/2;
+                let midGroupCenter = [(midGroupBoundsX[0]+midGroupBoundsX[1])/2, (midGroupBoundsY[0]+midGroupBoundsY[1])/2];
                 while(collisions.includes(true))
                 {
                   collisions = [false, false, false, false, false];
                   for(let i=0; i<fillerWords.length; i++)
                   {
-                    let boundsX = [d3.max(fillerWords[i], d => d.x+d.x1), d3.min(fillerWords[i], d => d.x+d.x0), 0];
-                    let boundsY = [d3.max(fillerWords[i], d => d.y+d.y1), d3.min(fillerWords[i], d => d.y+d.y0), 0];
-                    let xShift = (midGroupBoundsX[i%3]-boundsX[i%3])*xDirections[i]>0;
-                    let yShift = (midGroupBoundsY[i%3]-boundsY[i%3])*yDirections[i]>0;
-                    if(xShift || yShift)
+                    let boundsX = [d3.min(fillerWords[i], d => d.x+d.x0), d3.max(fillerWords[i], d => d.x+d.x1)];
+                    let boundsY = [d3.min(fillerWords[i], d => d.y+d.y0), d3.max(fillerWords[i], d => d.y+d.y1)];
+                    let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+                    let center = [(boundsX[0]+boundsX[1])/2, (boundsY[0]+boundsY[1])/2];
+                    if(fillerWords[i]!=midGroup && midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
                     {
                       collisions[i] = true;
                       fillerWords[i].forEach(function(d)
                       {
-                        /*if(xShift)
-                        {
-                          d.x += xDirections[i]*5;
-                        }
-                        if(yShift)
-                        {
-                          d.y += yDirections[i]*5;
-                        }*/
-                        d.x += xDirections[i]*5;
-                        d.y += yDirections[i]*5;
+                        d.x += xDirections[i]*10;
+                        d.y += yDirections[i]*10;
                         d.realWord.x = d.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
                         d.realWord.y = d.y-(d.fontSize*.45)-(d.fontSize*.1);
                       })
@@ -226,32 +220,26 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 let yDirections = [-1, -1, 0, 1, 1]
                 let collisions = [true, true, true, true, true];
                 let midGroup = wordsSplit[parseInt(wordsSplit.length/2)];
-                let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1), 0] //bounds of the center group (in this case, the 3rd)
-                let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1), 0]
+                let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1)] //bounds of the center group (in this case, the 3rd)
+                let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1)]
+                let midGroupRadius = Math.max(midGroupBoundsX[1]-midGroupBoundsX[0], midGroupBoundsY[1]-midGroupBoundsY[0])/2;
+                let midGroupCenter = [(midGroupBoundsX[0]+midGroupBoundsX[1])/2, (midGroupBoundsY[0]+midGroupBoundsY[1])/2];
                 while(collisions.includes(true))
                 {
                   collisions = [false, false, false, false, false];
                   for(let i=0; i<wordsSplit.length; i++)
                   {
-                    let boundsX = [d3.max(wordsSplit[i], d => d.x+d.x1), d3.min(wordsSplit[i], d => d.x+d.x0), 0];
-                    let boundsY = [d3.max(wordsSplit[i], d => d.y+d.y1), d3.min(wordsSplit[i], d => d.y+d.y0), 0];
-                    let xShift = (midGroupBoundsX[i%3]-boundsX[i%3])*xDirections[i]>0;
-                    let yShift = (midGroupBoundsY[i%3]-boundsY[i%3])*yDirections[i]>0;
-                    if(xShift || yShift)
+                    let boundsX = [d3.min(wordsSplit[i], d => d.x+d.x0), d3.max(wordsSplit[i], d => d.x+d.x1)];
+                    let boundsY = [d3.min(wordsSplit[i], d => d.y+d.y0), d3.max(wordsSplit[i], d => d.y+d.y1)];
+                    let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+                    let center = [(boundsX[0]+boundsX[1])/2, (boundsY[0]+boundsY[1])/2];
+                    if(wordsSplit[i]!=midGroup && midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
                     {
                       collisions[i] = true;
                       wordsSplit[i].forEach(function(d)
                       {
-                        /*if(xShift)
-                        {
-                          d.x += xDirections[i]*5;
-                        }
-                        if(yShift)
-                        {
-                          d.y += yDirections[i]*5;
-                        }*/
-                        d.x += xDirections[i]*5;
-                        d.y += yDirections[i]*5;
+                        d.x += xDirections[i]*10;
+                        d.y += yDirections[i]*10;
                       })
                     }
                   }
