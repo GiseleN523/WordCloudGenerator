@@ -8,7 +8,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
         {
             //initial tokenization
             let cleanText = textStr.split('\n').join(' ').split('\r').join(' ') //condense into one split?
-            cleanText = cleanText.replace(/[;:\[\]()“”."!?,_—\*-]/g, " ") //trying to remove underscore led to removing caps
+            cleanText = cleanText.replace(/[;:\[\]()“”."!?,–_—\*-]/g, " ") //trying to remove underscore led to removing caps
             let cleanWords = cleanText.split(' ')
 
             let wordsDict = {}
@@ -40,7 +40,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
                 wordsFreq = wordsFreq.filter(x => stopWords.findIndex(el => {return el.toUpperCase() === x.text.toUpperCase()}) === -1);
             }
             
-            indDict = {} //creates dictionary of word text to index in wordsFreq, accomodating "constructor" exception - CHECK PLACEMENT + is it even used??
+            indDict = {} //creates dictionary of word text to index in wordsFreq for checking lowercase and uppercase duplicates
             let i = 0;
             wordsFreq.forEach(function(wordObj) {
               if(wordObj.text.toLowerCase() === 'constructor') {
@@ -101,8 +101,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
             
             console.log(wordsFreq)
     
-            //clustering fns below -- need organization!!
-            
+            //cluster semantically using kmeans clustering or default to semGroup 0
             if(semPref) {
               let toCluster = [] 
               let rareWrds = []
@@ -126,32 +125,45 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
               })
               let indClusts = groups.sortedInd //dictionary mapping array of vector indices according to toCluster to their index
               
-              console.log(indClusts) //indexed groups
+              console.log(indClusts) //indexed groups - prints every toCluster word and its group! so error is further down
+              //testing cluster printouts - uhhh
+              // let testClust = {}
+              // console.log(testClust)
+              // for(let i=0; i<k; i++) {
+              //   testClust[i] = []
+              //   console.log(i)
+              // }
+              // console.log(testClust)
+              //end testing
               ind = 0
               wordsFreq.forEach(function(wordObj) {
                 if(wordObj.text.toLowerCase() in vectsDict) {
                   group = indClusts[ind]
+                  // if(typeof testClust[ind] !== 'undefined') {
+                  //   //testClust[ind].push(wordObj.text) //moretesting
+                  // }
                   wordObj.semGroup = group
                   if (typeof group === 'undefined') {
                     wordObj.semGroup = -2
                   }
+                  ind++
                 }
                 else {
                   //alternate semgrouping function for wordFreq objs not in toCluster will go here, placeholder below:
                   wordObj.semGroup = -1
                 }
-                ind++
               })
+              //console.log(testClust) //moretesting
               //testing print loop
               wordsFreq.forEach(function(wordObj) {
                 console.log(wordObj.text)
                 console.log(wordObj.semGroup)
               })
                //how useful is the preprocessing? tokenization errors! poorly trained dataset?
-              console.log(toCluster.length)
-              console.log(wordsFreq.length)
-              console.log(rareWrds.length)
-              console.log(rareWrds)
+              console.log('total words: ' + wordsFreq.length)
+              console.log('words found in dataset: '+ toCluster.length)
+              console.log('words leftover: ' + rareWrds.length)
+              console.log('actual words leftover: ' + rareWrds)
     
             }
             else {
