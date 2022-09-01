@@ -72,7 +72,6 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         context.font = widestWord.fontSize+"px "+widestWord.font;
 
         let widestWordWidth = context.measureText(widestWord.text).width;
-        console.log(widestWord);
         let fillerStr="";
         while(context.measureText(fillerStr).width<widestWordWidth+8)
         {
@@ -355,7 +354,6 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         let extraWordsTemp = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>this.widthPref/2 || d['__data__'].x<0-this.heightPref/2 || d['__data__'].y>this.heightPref/2 || d['__data__'].y<0-this.widthPref/2)).map(d => d['__data__']);
         //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
         this.extraWords = extraWordsTemp.concat(wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
-        console.log(this.extraWords);
   
         this.svg.append('rect')
           .attr('id', 'wordFreqTooltipBackground')

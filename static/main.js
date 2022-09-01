@@ -24,10 +24,17 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     app.stopWordPref = document.getElementById('stopWordsPref').checked;
     app.lightnessPref = document.getElementById('lightnessPref').checked;
     app.semanticPref = document.getElementById('semanticPref').checked;
-    //app.colorPref = Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     if(app.semanticPref)
     {
-      app.colorPref = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)];
+      if(document.getElementById("groupColorPref").value==="custom")
+      {
+        app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
+        console.log(app.colorPref);
+      }
+      else
+      {
+        app.colorPref = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)];
+      }
     }
     else
     {
@@ -93,6 +100,8 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
       document.getElementById("groupColorPref").style="display: none";
     }
   }
+
+  document.getElementById("groupColorPref").onchange = () => document.getElementById("groupColorPref").value==="custom" ? document.getElementById("customColors").style.display = "block" : document.getElementById("customColors").style.display = "none";
   
   document.getElementById("fileInput").onchange = () => fileUploadLast = true;
 
@@ -164,7 +173,6 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
   function appendToExtraWordsList(numToAdd)
   {
     let i = 0;
-    console.log(app.extraWords);
     let startingInd = document.getElementById("extraWordsList").children.length;
     while(i+startingInd<app.extraWords.length && i<numToAdd)
     {
