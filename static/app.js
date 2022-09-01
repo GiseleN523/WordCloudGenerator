@@ -273,9 +273,9 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
       {
         console.log(this.words);
 
-        if(this.colorPref[0]!=="#666666")
+        if(this.colorPref[0]!=="#444444")
         {
-          this.colorPref.unshift("#666666");
+          this.colorPref.unshift("#444444");
         }
         let hslColors = this.colorPref.map(d => d3.hsl(d));
 

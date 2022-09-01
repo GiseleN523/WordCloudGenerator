@@ -11,7 +11,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
   let colorSchemes = [d3.schemeSet1, d3.schemeDark2, d3.schemeTableau10, d3.schemeSet2];
   let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4"];
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
-  document.getElementById("groupColorPref").innerHTML+='<option value="custom">Custom</option>';
+  document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
 
   document.getElementById('generateButton').onclick = () => 
   {
@@ -27,15 +27,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     app.semanticPref = document.getElementById('semanticPref').checked;
     if(app.semanticPref)
     {
-      if(document.getElementById("groupColorPref").value==="custom")
-      {
-        app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
-        console.log(app.colorPref);
-      }
-      else
-      {
-        app.colorPref = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)];
-      }
+      app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     }
     else
     {
@@ -94,6 +86,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     {
       document.getElementById("singleColorPref").style="display: none";
       document.getElementById("groupColorPref").style="display: inline";
+      document.getElementById("customColors").style.display = "block";
     }
     else
     {
@@ -103,7 +96,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     }
   }
 
-  document.getElementById("groupColorPref").onchange = () => document.getElementById("groupColorPref").value==="custom" ? document.getElementById("customColors").style.display = "block" : document.getElementById("customColors").style.display = "none";
+  document.getElementById("groupColorPref").onchange = () => document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)][i]);
   
   document.getElementById("fileInput").onchange = () => fileUploadLast = true;
 
