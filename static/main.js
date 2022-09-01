@@ -15,6 +15,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
 
   document.getElementById('generateButton').onclick = () => 
   {
+    document.querySelector("#extraWords input#showAllWords").checked = false;
     app.widthPref = dim;
     app.heightPref = dim;
     app.paddingPref = document.getElementById('paddingPref').value;
@@ -38,7 +39,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     }
     else
     {
-      app.colorPref = [document.getElementById("singleColorPref").value];
+      app.colorPref = [document.getElementById('#singleColorPref').value];
     }
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
@@ -92,12 +93,13 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     if(document.getElementById("semanticPref").checked)
     {
       document.getElementById("singleColorPref").style="display: none";
-      document.getElementById("groupColorPref").style="display: block";
+      document.getElementById("groupColorPref").style="display: inline";
     }
     else
     {
-      document.getElementById("singleColorPref").style="display: block";
+      document.getElementById("singleColorPref").style="display: inline";
       document.getElementById("groupColorPref").style="display: none";
+      document.getElementById("customColors").style.display = "none";
     }
   }
 

@@ -28,7 +28,8 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
               this.words.pop();
           }
-          this.words = this.words.filter(d => d.semGroup>-1);
+          //this.words = this.words.filter(d => d.semGroup>-1);
+          this.words.forEach(d => d.semGroup++); //since we still have group -1, increase all semantic group numbers by 1 to make them >=0
           
           sizeScale = d3.scaleSqrt()
             .domain([0, d3.max(this.words, d => d.frequency)])
@@ -272,6 +273,10 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
       {
         console.log(this.words);
 
+        if(this.colorPref[0]!=="#666666")
+        {
+          this.colorPref.unshift("#666666");
+        }
         let hslColors = this.colorPref.map(d => d3.hsl(d));
 
         let lightnessScales = [];
