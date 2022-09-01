@@ -155,10 +155,10 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
               })
               //console.log(testClust) //moretesting
               //testing print loop
-              wordsFreq.forEach(function(wordObj) {
-                console.log(wordObj.text)
-                console.log(wordObj.semGroup)
-              })
+              // wordsFreq.forEach(function(wordObj) {
+              //   console.log(wordObj.text)
+              //   console.log(wordObj.semGroup)
+              // })
                //how useful is the preprocessing? tokenization errors! poorly trained dataset?
               console.log('total words: ' + wordsFreq.length)
               console.log('words found in dataset: '+ toCluster.length)
