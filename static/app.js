@@ -112,14 +112,14 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 d.y += size[1]/2;
                 let realWord = d.realWord;
                 realWord.x = d.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                realWord.y = d.y-(d.fontSize*.45)//-(d.fontSize*.1);
+                realWord.y = d.y-(d.fontSize*.45)-(d.fontSize*.1);
 
                 let context = document.createElement("canvas").getContext("2d");
                 context.font = d.fontSize+"px "+d.font;
                 realWord.width = context.measureText(d.text).width;
                 realWord.x0 = d.x-realWord.width/2;
                 realWord.x1 = d.x0*-1;
-                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)//+(d.fontSize*.2);
+                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
               });
               if(app.semanticPref && i==fillerWords.length-1)
               {
@@ -328,10 +328,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           {
             let context = document.createElement("canvas").getContext("2d");
             context.font = d.fontSize+"px "+d.font;
-            let ascentHeight = context.measureText(d.text).actualBoundingBoxAscent;
-            let descentHeight = context.measureText(d.text).actualBoundingBoxDescent;
-            console.log(d.text+" "+descentHeight+" "+ascentHeight)
-            d.y += descentHeight>ascentHeight ? -(descentHeight+ascentHeight)/2 : (descentHeight+ascentHeight)/2;
+            d.y -= context.measureText(d.text).actualBoundingBoxDescent/2;
           })
         }
 
@@ -341,7 +338,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("alignment-baseline", "middle")
+          .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : "middle")
           .attr("fill", d => (this.circleBoundingPref || this.rectBoundingPref) ? "black" : d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
           .attr("x", d => d.x)
           .attr("y", function(d)
