@@ -8,13 +8,14 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
 
   document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
 
-  let colorSchemes = [d3.schemeSet1, d3.schemeDark2, d3.schemeTableau10, d3.schemeSet2];
-  let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4"];
+  let colorSchemes = [d3.schemeSet1, d3.schemeDark2, d3.schemeTableau10, d3.schemeSet2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"], ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"]];
+  let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4", "Color Scheme 5", "Color Scheme 6", "Color Scheme 7"];
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
-  document.getElementById("groupColorPref").innerHTML+='<option value="custom">Custom</option>';
+  document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
 
   document.getElementById('generateButton').onclick = () => 
   {
+    document.querySelector("#extraWords input#showAllWords").checked = false;
     app.widthPref = dim;
     app.heightPref = dim;
     app.paddingPref = document.getElementById('paddingPref').value;
@@ -24,14 +25,13 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     app.stopWordPref = document.getElementById('stopWordsPref').checked;
     app.lightnessPref = document.getElementById('lightnessPref').checked;
     app.semanticPref = document.getElementById('semanticPref').checked;
-    //app.colorPref = Array.from(document.querySelectorAll('div#colorPref input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     if(app.semanticPref)
     {
-      app.colorPref = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)];
+      app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     }
     else
     {
-      app.colorPref = [document.getElementById("singleColorPref").value];
+      app.colorPref = [document.getElementById('#singleColorPref').value];
     }
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
@@ -85,14 +85,18 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     if(document.getElementById("semanticPref").checked)
     {
       document.getElementById("singleColorPref").style="display: none";
-      document.getElementById("groupColorPref").style="display: block";
+      document.getElementById("groupColorPref").style="display: inline";
+      document.getElementById("customColors").style.display = "block";
     }
     else
     {
-      document.getElementById("singleColorPref").style="display: block";
+      document.getElementById("singleColorPref").style="display: inline";
       document.getElementById("groupColorPref").style="display: none";
+      document.getElementById("customColors").style.display = "none";
     }
   }
+
+  document.getElementById("groupColorPref").onchange = () => document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)][i]);
   
   document.getElementById("fileInput").onchange = () => fileUploadLast = true;
 
@@ -164,7 +168,6 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
   function appendToExtraWordsList(numToAdd)
   {
     let i = 0;
-    console.log(app.extraWords);
     let startingInd = document.getElementById("extraWordsList").children.length;
     while(i+startingInd<app.extraWords.length && i<numToAdd)
     {

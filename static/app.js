@@ -28,7 +28,8 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
               this.words.pop();
           }
-          this.words = this.words.filter(d => d.semGroup>-1);
+          //this.words = this.words.filter(d => d.semGroup>-1);
+          this.words.forEach(d => d.semGroup++); //since we still have group -1, increase all semantic group numbers by 1 to make them >=0
           
           sizeScale = d3.scaleSqrt()
             .domain([0, d3.max(this.words, d => d.frequency)])
@@ -69,10 +70,10 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             widestWord = d;
           }
         });
+        console.log(widestWord);
         context.font = widestWord.fontSize+"px "+widestWord.font;
 
         let widestWordWidth = context.measureText(widestWord.text).width;
-        console.log(widestWord);
         let fillerStr="";
         while(context.measureText(fillerStr).width<widestWordWidth+8)
         {
@@ -273,6 +274,10 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
       {
         console.log(this.words);
 
+        if(this.colorPref[0]!=="#444444")
+        {
+          this.colorPref.unshift("#444444");
+        }
         let hslColors = this.colorPref.map(d => d3.hsl(d));
 
         let lightnessScales = [];
@@ -319,6 +324,12 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             })
             .on('mouseover', (event, d) => showWordFreqTooltip(d))
             .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+          this.words.forEach(function(d)
+          {
+            let context = document.createElement("canvas").getContext("2d");
+            context.font = d.fontSize+"px "+d.font;
+            d.y -= context.measureText(d.text).actualBoundingBoxDescent/2;
+          })
         }
 
         this.svg.selectAll("text")
@@ -327,7 +338,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("alignment-baseline", "middle")
+          .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : "middle")
           .attr("fill", d => (this.circleBoundingPref || this.rectBoundingPref) ? "black" : d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
           .attr("x", d => d.x)
           .attr("y", function(d)
@@ -355,7 +366,6 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         let extraWordsTemp = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>this.widthPref/2 || d['__data__'].x<0-this.heightPref/2 || d['__data__'].y>this.heightPref/2 || d['__data__'].y<0-this.widthPref/2)).map(d => d['__data__']);
         //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
         this.extraWords = extraWordsTemp.concat(wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
-        console.log(this.extraWords);
   
         this.svg.append('rect')
           .attr('id', 'wordFreqTooltipBackground')
