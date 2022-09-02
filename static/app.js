@@ -70,6 +70,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             widestWord = d;
           }
         });
+        console.log(widestWord);
         context.font = widestWord.fontSize+"px "+widestWord.font;
 
         let widestWordWidth = context.measureText(widestWord.text).width;
@@ -111,14 +112,14 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 d.y += size[1]/2;
                 let realWord = d.realWord;
                 realWord.x = d.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                realWord.y = d.y-(d.fontSize*.45)-(d.fontSize*.1);
+                realWord.y = d.y-(d.fontSize*.45)//-(d.fontSize*.1);
 
                 let context = document.createElement("canvas").getContext("2d");
                 context.font = d.fontSize+"px "+d.font;
                 realWord.width = context.measureText(d.text).width;
                 realWord.x0 = d.x-realWord.width/2;
                 realWord.x1 = d.x0*-1;
-                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
+                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)//+(d.fontSize*.2);
               });
               if(app.semanticPref && i==fillerWords.length-1)
               {
@@ -323,6 +324,15 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             })
             .on('mouseover', (event, d) => showWordFreqTooltip(d))
             .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+          this.words.forEach(function(d)
+          {
+            let context = document.createElement("canvas").getContext("2d");
+            context.font = d.fontSize+"px "+d.font;
+            let ascentHeight = context.measureText(d.text).actualBoundingBoxAscent;
+            let descentHeight = context.measureText(d.text).actualBoundingBoxDescent;
+            console.log(d.text+" "+descentHeight+" "+ascentHeight)
+            d.y += descentHeight>ascentHeight ? -(descentHeight+ascentHeight)/2 : (descentHeight+ascentHeight)/2;
+          })
         }
 
         this.svg.selectAll("text")
