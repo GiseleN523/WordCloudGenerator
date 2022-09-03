@@ -1,6 +1,6 @@
 //this is our word cloud functionality that we could import into Observable
 
-define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout.cloud.js', 'd3', 'parser'], function(d3cloud, d3, parser)
+define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout.cloud.js', 'd3', 'https://cdn.jsdelivr.net/gh/GiseleN523/WordCloudGenerator@0243d7fe1dd2fc45195685846ee29f269283beb6/static/parser.js'], function(d3cloud, d3, parser)
 {
   
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
