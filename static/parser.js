@@ -1,4 +1,4 @@
-define(['https://cdn.jsdelivr.net/gh/GiseleN523/WordCloudGenerator@d65588c23b59ecdb0f531a189f980ef90268c270/static/wordvecs10000.js', 'https://cdn.jsdelivr.net/gh/GiseleN523/WordCloudGenerator@d558ac72498eabefc45ff09ca8e508340486d2d7/static/kmeans.js'], function(vecs, kmeans) {
+define(['https://cdn.jsdelivr.net/gh/GiseleN523/WordCloudGenerator@d78eec700ce8fdc7e19ccf9d1907ca3f0fcef322/static/wordvecs10000.js', 'https://cdn.jsdelivr.net/gh/GiseleN523/WordCloudGenerator@d558ac72498eabefc45ff09ca8e508340486d2d7/static/kmeans.js'], function(vecs, kmeans) {
    
     vectsDict = vecs.getVecs();
     vectsArr = Object.values(vectsDict);
