@@ -31,7 +31,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     }
     else
     {
-      app.colorPref = [document.getElementById('#singleColorPref').value];
+      app.colorPref = [document.getElementById('singleColorPref').value];
     }
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
@@ -52,12 +52,14 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
       reader.onload = function()
       {
         app.createCloud(reader.result);
+        document.getElementById("wordCount").innerHTML = " | Number of Unique Words (excluding stop words): "+(app.words.length+app.extraWords.length);
         displayCloud(app.svg.node());
       };
     }
     else if(!fileUploadLast && textInput.value.length>0)
     {
       app.createCloud(textInput.value);
+      document.getElementById("wordCount").innerHTML = " | Number of Unique Words (excluding stop words): "+(app.words.length+app.extraWords.length);
       displayCloud(app.svg.node());
     }
   }

@@ -221,6 +221,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
               {  //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
                 d.x += size[0]/2;
                 d.y += size[1]/2;
+                console.log(size[0]/2+" "+size[1]/2);
               });
               if(app.semanticPref && i==wordsSplit.length-1)
               {
@@ -338,7 +339,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : "middle")
+          .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : "auto")
           .attr("fill", d => (this.circleBoundingPref || this.rectBoundingPref) ? "black" : d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
           .attr("x", d => d.x)
           .attr("y", function(d)
