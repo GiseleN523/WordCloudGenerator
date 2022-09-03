@@ -339,18 +339,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
           .attr("font-size", d => d.fontSize)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important
-          .attr("alignment-baseline", function()
-          {
-            if(this.rectBoundingPref)
-            {
-              return "mathematical";
-            }
-            else if(this.circleBoundingPref)
-            {
-              return "middle";
-            }
-            return "auto";
-          })
+          .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : (this.circleBoundingPref ? "middle" : "auto"))
           .attr("fill", d => (this.circleBoundingPref || this.rectBoundingPref) ? "black" : d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
           .attr("x", d => d.x)
           .attr("y", function(d)
