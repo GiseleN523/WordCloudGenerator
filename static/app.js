@@ -16,7 +16,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
         fontSizePref : 50,
         stopWordPref : true,
         lightnessPref : true,
-        semanticPref : true,
+        semanticPref : 5,
         colorPref : ["#ff0000"],
         rectBoundingPref : false,
         circleBoundingPref : false,
@@ -121,7 +121,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 realWord.x1 = d.x0*-1;
                 realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
               });
-              if(app.semanticPref && i==fillerWords.length-1)
+              if(app.semanticPref>1 && i==fillerWords.length-1)
               {
                 let xDirections = [-1, 1, -1, 1];
                 let yDirections = [-1, -1, 1, 1]
@@ -162,7 +162,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 }
                 app.createSvg();
               }
-              else if(!app.semanticPref)
+              else if(app.semanticPref==1)
               {
                 app.createSvg();
               }
@@ -223,7 +223,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 d.y += size[1]/2;
                 console.log(size[0]/2+" "+size[1]/2);
               });
-              if(app.semanticPref && i==wordsSplit.length-1)
+              if(app.semanticPref>1 && i==wordsSplit.length-1)
               {
                 let xDirections = [-1, 1, -1, 1];
                 let yDirections = [-1, -1, 1, 1]
@@ -262,7 +262,7 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
                 }
                 app.createSvg();
               }
-              else if(!app.semanticPref)
+              else if(app.semanticPref==1)
               {
                 app.createSvg();
               }

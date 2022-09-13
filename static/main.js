@@ -24,15 +24,8 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
     app.fontSizePref = document.getElementById('fontSizePref').value;
     app.stopWordPref = document.getElementById('stopWordsPref').checked;
     app.lightnessPref = document.getElementById('lightnessPref').checked;
-    app.semanticPref = document.getElementById('semanticPref').checked;
-    if(app.semanticPref)
-    {
-      app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
-    }
-    else
-    {
-      app.colorPref = [document.getElementById('singleColorPref').value];
-    }
+    app.semanticPref = document.getElementById('semanticPref').value;
+    app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
   
@@ -82,21 +75,7 @@ define(['app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 
 
   document.getElementById("paddingPref").onchange = () => document.getElementById("paddingLabel").innerHTML = document.getElementById("paddingPref").value;
 
-  document.getElementById("semanticPref").onchange = function()
-  {
-    if(document.getElementById("semanticPref").checked)
-    {
-      document.getElementById("singleColorPref").style="display: none";
-      document.getElementById("groupColorPref").style="display: inline";
-      document.getElementById("customColors").style.display = "block";
-    }
-    else
-    {
-      document.getElementById("singleColorPref").style="display: inline";
-      document.getElementById("groupColorPref").style="display: none";
-      document.getElementById("customColors").style.display = "none";
-    }
-  }
+  document.getElementById("semanticPref").onchange = () => document.getElementById("semanticLabel").innerHTML = document.getElementById("semanticPref").value;
 
   document.getElementById("groupColorPref").onchange = () => document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)][i]);
   

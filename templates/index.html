@@ -7,7 +7,7 @@
         <div id="wordCloudPreview"></div>
         <input id ="fileInput" type="file" accept=".txt">
         <span id="wordCount"></span><br>
-        <textarea id="rawTextInput" rows = "15" placeholder="Your text here"></textarea>
+        <textarea id="rawTextInput" rows="15" placeholder="Your text here"></textarea>
     </div>
     <div id="rightContentColumn">
         <h3>Preferences</h3>
@@ -82,7 +82,7 @@
                 <input type="checkbox" id="lightnessPref" checked>
             </div>
             <div>
-                <label for="semanticPref">Split Words into Semantic Groups</label>
+                <label for="semanticPref">Number of Semantic Groups</label>
                 <span class="tooltip">?<span class="tooltipContent">
                     <li><a href="https://dl.acm.org/doi/10.1007/978-3-642-03655-2_43" target="_blank">
                         Organizing words thematically can mostly eliminate a bias that causes people to pay more attention to the upper-left-hand words
@@ -100,7 +100,8 @@
                         According to the Gestalt school of psychology, objects that are close together or that are similar are seen as a group 
                     </a></li>
                 </span></span>
-                <input type="checkbox" id="semanticPref" checked>
+                <input type="range" id="semanticPref" min="1" max="9" value="5">
+                <span id="semanticLabel">5</span>
             </div>
             <div id="colorPref"><label for="colorPref">Color</label>
                 <span class="tooltip">?<span class="tooltipContent">
@@ -109,7 +110,6 @@
                     </a></li>
                 </span></span>
                 <select name="groupColorPref" id="groupColorPref"></select>
-                <input id="singleColorPref" type="color" value="#0000ff">
             </div>
             <div id="customColors">
                 <input type="color">

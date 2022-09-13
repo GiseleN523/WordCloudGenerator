@@ -99,7 +99,8 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
             })
     
             //cluster semantically using kmeans clustering or default to semGroup 0
-            if(semPref) {
+            if(semPref>1) {
+              k = semPref-1; //create 1 fewer group than the user setting so we have one left over for gray words
               if(wordsFreq.length < k) {
                 alert("Sorry, the input text has too few unique words to generate semantic clusters.")
                 return []
