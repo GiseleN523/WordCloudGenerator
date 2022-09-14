@@ -108,63 +108,61 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
               let size = this.size();
               fillerWords[i].forEach(function(d)
               {
-                d.x += size[0]/2;
-                d.y += size[1]/2;
-                let realWord = d.realWord;
-                realWord.x = d.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                realWord.y = d.y-(d.fontSize*.45)-(d.fontSize*.1);
-
                 let context = document.createElement("canvas").getContext("2d");
                 context.font = d.fontSize+"px "+d.font;
-                realWord.width = context.measureText(d.text).width;
-                realWord.x0 = d.x-realWord.width/2;
-                realWord.x1 = d.x0*-1;
-                realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
+                d.realWord.width = context.measureText(d.text).width;
+                d.realWord.x0 = d.x-d.realWord.width/2;
+                d.realWord.x1 = d.x0*-1;
+                d.realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
               });
-              if(app.semanticPref>1 && i==fillerWords.length-1)
+              if(i===fillerWords.length-1)
               {
-                let xDirections = [-1, 1, -1, 1];
-                let yDirections = [-1, -1, 1, 1]
-                let collisions = [true, true, true, true];
-                let midGroup = fillerWords[d3.maxIndex(fillerWords, function(p)
+                let tempSvg = d3.create("svg")
+                  .attr("width", app.widthPref)
+                  .attr("height", app.heightPref);
+
+                fillerWords.forEach(function(p)
                 {
                   let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
                   let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
-                  let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-                  return radius;
-                })];
-                fillerWords.splice(fillerWords.indexOf(midGroup), 1);
-                let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1)] //bounds of the center group (in this case, the 3rd)
-                let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1)]
-                let midGroupRadius = Math.max(midGroupBoundsX[1]-midGroupBoundsX[0], midGroupBoundsY[1]-midGroupBoundsY[0])/2;
-                let midGroupCenter = [(midGroupBoundsX[0]+midGroupBoundsX[1])/2, (midGroupBoundsY[0]+midGroupBoundsY[1])/2];
-                while(collisions.includes(true))
-                {
-                  collisions = [false, false, false, false];
-                  for(let i=0; i<fillerWords.length; i++)
+                  p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+                })
+
+                let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
+                  .data(fillerWords)
+                  .join("circle")
+                  .attr("r", d => d.radius)
+                  .attr("cx", app.widthPref/2)
+                  .attr("cy", app.heightPref/2)
+
+                let simulation = d3.forceSimulation()
+                  .force("center", d3.forceCenter(app.widthPref/2, app.heightPref/2))
+                  .force("charge", d3.forceManyBody().strength(0.5))
+                  .force("collide", d3.forceCollide(fillerWords).strength(.02).radius(d => d.radius))
+
+                simulation
+                  .nodes(fillerWords)
+                  .on("tick", function(){
+                    node
+                      .attr("cx", d => d.x)
+                      .attr("cy", d => d.y)
+    
+                  })
+                  .on("end", function()
                   {
-                    let boundsX = [d3.min(fillerWords[i], d => d.x+d.x0), d3.max(fillerWords[i], d => d.x+d.x1)];
-                    let boundsY = [d3.min(fillerWords[i], d => d.y+d.y0), d3.max(fillerWords[i], d => d.y+d.y1)];
-                    let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-                    let center = [(boundsX[0]+boundsX[1])/2, (boundsY[0]+boundsY[1])/2];
-                    if(midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
+                    for(let i=0; i<fillerWords.length; i++)
                     {
-                      collisions[i] = true;
-                      fillerWords[i].forEach(function(d)
+                      for(let j=0; j<fillerWords[i].length; j++)
                       {
-                        d.x += xDirections[i]*10;
-                        d.y += yDirections[i]*10;
-                        d.realWord.x = d.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                        d.realWord.y = d.y-(d.fontSize*.45)-(d.fontSize*.1);
-                      })
+                        let word = fillerWords[i][j];
+                        word.x += fillerWords[i].x;
+                        word.y += fillerWords[i].y;
+                        word.realWord.x = word.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                        word.realWord.y = word.y-(word.fontSize*.45)-(word.fontSize*.1);
+                      }
                     }
-                  }
-                }
-                app.createSvg();
-              }
-              else if(app.semanticPref==1)
-              {
-                app.createSvg();
+                    app.createSvg();
+                  });
               }
             });
           cloud.start();
@@ -216,55 +214,51 @@ define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout
             .random(() => .5) //important
             .on("end", function() //when cloud generation is finished, create text in svg element
             {
-              let size = this.size();
-              wordsSplit[i].forEach(function(d)
-              {  //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                d.x += size[0]/2;
-                d.y += size[1]/2;
-                console.log(size[0]/2+" "+size[1]/2);
-              });
-              if(app.semanticPref>1 && i==wordsSplit.length-1)
+              if(i===wordsSplit.length-1)
               {
-                let xDirections = [-1, 1, -1, 1];
-                let yDirections = [-1, -1, 1, 1]
-                let collisions = [true, true, true, true];
-                let midGroup = wordsSplit[d3.maxIndex(wordsSplit, function(p)
+                let tempSvg = d3.create("svg")
+                  .attr("width", app.widthPref)
+                  .attr("height", app.heightPref);
+
+                wordsSplit.forEach(function(p)
                 {
                   let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
                   let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
-                  let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-                  return radius;
-                })];
-                wordsSplit.splice(wordsSplit.indexOf(midGroup), 1);
-                let midGroupBoundsX = [d3.min(midGroup, d => d.x+d.x0), d3.max(midGroup, d => d.x+d.x1)] //bounds of the center group (in this case, the 3rd)
-                let midGroupBoundsY = [d3.min(midGroup, d => d.y+d.y0), d3.max(midGroup, d => d.y+d.y1)]
-                let midGroupRadius = Math.max(midGroupBoundsX[1]-midGroupBoundsX[0], midGroupBoundsY[1]-midGroupBoundsY[0])/2;
-                let midGroupCenter = [(midGroupBoundsX[0]+midGroupBoundsX[1])/2, (midGroupBoundsY[0]+midGroupBoundsY[1])/2];
-                while(collisions.includes(true))
-                {
-                  collisions = [false, false, false, false];
-                  for(let i=0; i<wordsSplit.length; i++)
+                  p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+                })
+
+                let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
+                  .data(wordsSplit)
+                  .join("circle")
+                  .attr("r", d => d.radius)
+                  .attr("cx", app.widthPref/2)
+                  .attr("cy", app.heightPref/2)
+
+                let simulation = d3.forceSimulation()
+                  .force("center", d3.forceCenter(app.widthPref/2, app.heightPref/2))
+                  .force("charge", d3.forceManyBody().strength(0.5))
+                  .force("collide", d3.forceCollide(wordsSplit).strength(.02).radius(d => d.radius))
+
+                simulation
+                  .nodes(wordsSplit)
+                  .on("tick", function(){
+                    node
+                      .attr("cx", d => d.x)
+                      .attr("cy", d => d.y)
+    
+                  })
+                  .on("end", function()
                   {
-                    let boundsX = [d3.min(wordsSplit[i], d => d.x+d.x0), d3.max(wordsSplit[i], d => d.x+d.x1)];
-                    let boundsY = [d3.min(wordsSplit[i], d => d.y+d.y0), d3.max(wordsSplit[i], d => d.y+d.y1)];
-                    let radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-                    let center = [(boundsX[0]+boundsX[1])/2, (boundsY[0]+boundsY[1])/2];
-                    if(midGroupRadius+radius > Math.sqrt(((midGroupCenter[0]-center[0])**2)+((midGroupCenter[1]-center[1])**2)))
+                    for(let i=0; i<wordsSplit.length; i++)
                     {
-                      collisions[i] = true;
-                      wordsSplit[i].forEach(function(d)
+                      for(let j=0; j<wordsSplit[i].length; j++)
                       {
-                        d.x += xDirections[i]*10;
-                        d.y += yDirections[i]*10;
-                      })
+                        wordsSplit[i][j].x += wordsSplit[i].x;
+                        wordsSplit[i][j].y += wordsSplit[i].y;
+                      }
                     }
-                  }
-                }
-                app.createSvg();
-              }
-              else if(app.semanticPref==1)
-              {
-                app.createSvg();
+                    app.createSvg();
+                  });
               }
             });
           cloud.start();
