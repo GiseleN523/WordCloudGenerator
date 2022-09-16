@@ -1,424 +1,412 @@
 //this is our word cloud functionality that we could import into Observable
 
-define(['https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout.cloud.js', 'd3', 'parser'], function(d3cloud, d3, parser)
+define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.layout.cloud.js', 'parser'], function(d3, d3cloud, parser)
 {
-  
+
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
 
-    return {
-        stopWords : defaultStop.split(" "), 
-        extraWords : [], //words that aren't stop words but weren't included in the cloud for whatever reason
-        widthPref : 700,
-        heightPref: 700,
-        paddingPref : 3,
-        numWordsPref : 100,
-        minCountPref : 1,
-        fontSizePref : 50,
-        stopWordPref : true,
-        lightnessPref : true,
-        semanticPref : 5,
-        colorPref : ["#ff0000"],
-        rectBoundingPref : false,
-        circleBoundingPref : false,
-        createCloud : function(wordsRaw)
-        {
-          wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
-          this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
-          while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
-          { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
-              this.words.pop();
-          }
-          //this.words = this.words.filter(d => d.semGroup>-1);
-          this.words.forEach(d => d.semGroup++); //since we still have group -1, increase all semantic group numbers by 1 to make them >=0
-          
-          sizeScale = d3.scaleSqrt()
-            .domain([0, d3.max(this.words, d => d.frequency)])
-            .range([0, this.fontSizePref])
+  return {
+    stopWords : defaultStop.split(" "), 
+    extraWords : [], //words that aren't stop words but weren't included in the cloud for various reasons
+    dimPref : 700,
+    paddingPref : 3,
+    numWordsPref : 100,
+    minCountPref : 1,
+    fontSizePref : 50,
+    stopWordPref : true,
+    lightnessPref : true,
+    semanticPref : 5,
+    colorPref : d3.schemeTableau10,
+    rectBoundingPref : false,
+    circleBoundingPref : false,
+    createCloud : function(wordsRaw)
+    {
+      wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
+      this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
+      while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
+      { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
+        this.words.pop();
+      }
 
-          this.words.forEach(function(d){
-            d.fontSize = sizeScale(d.frequency);
-          });
+      this.words.forEach(d => d.semGroup++); //since we still have group -1, increase all semantic group numbers by 1 to make them >=0
+      
+      let sizeScale = d3.scaleSqrt()
+        .domain([0, d3.max(this.words, d => d.frequency)])
+        .range([0, this.fontSizePref])
 
-          this.svg = d3.create("svg")
-            .attr("width", this.widthPref)
-            .attr("height", this.heightPref);
+      this.words.forEach(function(d){
+        d.fontSize = sizeScale(d.frequency);
+      });
 
-          if(this.rectBoundingPref)
-          {
-            this.setRectSvg();
-          }
-          else if(this.circleBoundingPref)
-          {
-            this.setCircleSvg();
-          }
-          else
-          {
-            this.setSvgWithoutBoundingBox();
-          }
-      },
+      this.svg = d3.create("svg")
+        .attr("width", this.dimPref)
+        .attr("height", this.dimPref);
 
-      setRectSvg : function()
+      if(this.rectBoundingPref)
       {
-        let context = document.createElement("canvas").getContext("2d");
-        context.font = "10px "+this.words[0].font;
-
-        let widestWord = this.words[0];
-        this.words.forEach(function(d)
-        {
-          if(context.measureText(widestWord.text).width<context.measureText(d.text).width)
-          {
-            widestWord = d;
-          }
-        });
-        console.log(widestWord);
-        context.font = widestWord.fontSize+"px "+widestWord.font;
-
-        let widestWordWidth = context.measureText(widestWord.text).width;
-        let fillerStr="";
-        while(context.measureText(fillerStr).width<widestWordWidth+8)
-        {
-          fillerStr+=String.fromCharCode(9608);
-        }
-
-        let fillerWords = [];
-        this.words.forEach(d => fillerWords.push({
-            text : fillerStr,
-            realWord : d,
-            fontSize : d.fontSize,
-            font : d.font,
-            frequency : d.frequency,
-            semGroup : d.semGroup
-          })); //fake words to "trick" d3-cloud into thinking words of the same frequency are all the same dimensions
-
-        fillerWords = this.splitBySemGroup(fillerWords);
-
-        let app = this;
-        for(let i=0; i<fillerWords.length; i++)
-        {
-          let cloud = d3cloud()
-            .words(fillerWords[i])
-            .size([this.widthPref, this.heightPref])
-            .font("sans-serif")
-            .rotate(0)
-            .fontSize(d => d.fontSize)
-            .padding(parseInt(this.paddingPref)+2) //so we can have a padding of 1 on the top and bottom
-            .random(() => .5) //important, overrides default placement function in d3-cloud and always starts spiral at center
-            .on("end", function() //when cloud generation is finished, create text in svg element
-            {
-              let size = this.size();
-              fillerWords[i].forEach(function(d)
-              {
-                let context = document.createElement("canvas").getContext("2d");
-                context.font = d.fontSize+"px "+d.font;
-                d.realWord.width = context.measureText(d.text).width;
-                d.realWord.x0 = d.x-d.realWord.width/2;
-                d.realWord.x1 = d.x0*-1;
-                d.realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
-              });
-              if(i===fillerWords.length-1)
-              {
-                let tempSvg = d3.create("svg")
-                  .attr("width", app.widthPref)
-                  .attr("height", app.heightPref);
-
-                fillerWords.forEach(function(p)
-                {
-                  let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
-                  let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
-                  p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-                })
-
-                let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
-                  .data(fillerWords)
-                  .join("circle")
-                  .attr("r", d => d.radius)
-                  .attr("cx", app.widthPref/2)
-                  .attr("cy", app.heightPref/2)
-
-                let simulation = d3.forceSimulation()
-                  .force("center", d3.forceCenter(app.widthPref/2, app.heightPref/2))
-                  .force("charge", d3.forceManyBody().strength(0.5))
-                  .force("collide", d3.forceCollide(fillerWords).strength(.02).radius(d => d.radius))
-
-                simulation
-                  .nodes(fillerWords)
-                  .on("tick", function(){
-                    node
-                      .attr("cx", d => d.x)
-                      .attr("cy", d => d.y)
-    
-                  })
-                  .on("end", function()
-                  {
-                    for(let i=0; i<fillerWords.length; i++)
-                    {
-                      for(let j=0; j<fillerWords[i].length; j++)
-                      {
-                        let word = fillerWords[i][j];
-                        word.x += fillerWords[i].x;
-                        word.y += fillerWords[i].y;
-                        word.realWord.x = word.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                        word.realWord.y = word.y-(word.fontSize*.45)-(word.fontSize*.1);
-                      }
-                    }
-                    app.createSvg();
-                  });
-              }
-            });
-          cloud.start();
-        }
-      },
-      setCircleSvg : function()
+        this.setRectSvg();
+      }
+      else if(this.circleBoundingPref)
       {
-        let wordsBySemGroup = [];
-        for(let i=0; i<=d3.max(this.words, d => d.semGroup); i++)
-        {
-          wordsBySemGroup.push({"children" : this.words.filter(d => d.semGroup==i)})
-        }
-        let root = d3.hierarchy({
-          "children" : wordsBySemGroup})
-          .sum(d => d.hasOwnProperty("frequency") ? d.frequency : 0);
-
-        let pack = d3.pack()
-          .padding(this.paddingPref)
-          .size([this.widthPref, this.heightPref]);
-
-        pack(root);
-
-        root.descendants().forEach(function(d)
-        {
-          d.data.x = d.x; //add x and y coords to data, AKA that item in words array, so they're more easily accessible
-          d.data.y = d.y;
-          d.data.r = d.r;
-          d.data.fontSize = sizeScale(d.data.frequency);
-          d.data.font = "sans-serif";
-        });
-        this.createSvg();
-      },
-
-      setSvgWithoutBoundingBox : function()
+        this.setCircleSvg();
+      }
+      else
       {
-        let wordsSplit = this.splitBySemGroup(this.words);
-        this.splitWord = wordsSplit;
+        this.setSvgWithoutBoundingBox();
+      }
+  },
 
-        let app = this;
-        for(let i=0; i<wordsSplit.length; i++)
-        {
-          let cloud = d3cloud()
-            .words(wordsSplit[i])
-            .size([this.widthPref, this.heightPref])
-            .font("sans-serif")
-            .rotate(0)
-            .fontSize(d => d.fontSize)
-            .padding(this.paddingPref)
-            .random(() => .5) //important
-            .on("end", function() //when cloud generation is finished, create text in svg element
-            {
-              if(i===wordsSplit.length-1)
-              {
-                let tempSvg = d3.create("svg")
-                  .attr("width", app.widthPref)
-                  .attr("height", app.heightPref);
+  setRectSvg : function() //this method is a mess
+  {
+    let context = document.createElement("canvas").getContext("2d");
+    context.font = "10px "+this.words[0].font;
 
-                wordsSplit.forEach(function(p)
-                {
-                  let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
-                  let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
-                  p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-                })
-
-                let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
-                  .data(wordsSplit)
-                  .join("circle")
-                  .attr("r", d => d.radius)
-                  .attr("cx", app.widthPref/2)
-                  .attr("cy", app.heightPref/2)
-
-                let simulation = d3.forceSimulation()
-                  .force("center", d3.forceCenter(app.widthPref/2, app.heightPref/2))
-                  .force("charge", d3.forceManyBody().strength(0.5))
-                  .force("collide", d3.forceCollide(wordsSplit).strength(.02).radius(d => d.radius))
-
-                simulation
-                  .nodes(wordsSplit)
-                  .on("tick", function(){
-                    node
-                      .attr("cx", d => d.x)
-                      .attr("cy", d => d.y)
-    
-                  })
-                  .on("end", function()
-                  {
-                    for(let i=0; i<wordsSplit.length; i++)
-                    {
-                      for(let j=0; j<wordsSplit[i].length; j++)
-                      {
-                        wordsSplit[i][j].x += wordsSplit[i].x;
-                        wordsSplit[i][j].y += wordsSplit[i].y;
-                      }
-                    }
-                    app.createSvg();
-                  });
-              }
-            });
-          cloud.start();
-        };
-      },
-
-      createSvg : function()
+    let widestWord = this.words[0];
+    this.words.forEach(function(d)
+    {
+      if(context.measureText(widestWord.text).width<context.measureText(d.text).width)
       {
-        console.log(this.words);
+        widestWord = d;
+      }
+    });
+    console.log(widestWord);
+    context.font = widestWord.fontSize+"px "+widestWord.font;
 
-        if(this.colorPref[0]!=="#444444")
-        {
-          this.colorPref.unshift("#444444");
-        }
-        let hslColors = this.colorPref.map(d => d3.hsl(d));
+    let widestWordWidth = context.measureText(widestWord.text).width;
+    let fillerStr="";
+    while(context.measureText(fillerStr).width<widestWordWidth+8)
+    {
+      fillerStr+=String.fromCharCode(9608);
+    }
 
-        let lightnessScales = [];
-        for(let i=0; i<hslColors.length; i++)
-        {
-          lightnessScales.push(d3.scaleLinear()
-            .domain([0, d3.max(this.words, d => d.frequency)])
-            .range(this.lightnessPref ? [.8, .4] : [hslColors[i].l, hslColors[i].l]));
-        };
+    let fillerWords = [];
+    this.words.forEach(d => fillerWords.push({
+        text : fillerStr,
+        realWord : d,
+        fontSize : d.fontSize,
+        font : d.font,
+        frequency : d.frequency,
+        semGroup : d.semGroup
+      })); //fake words to "trick" d3-cloud into thinking words of the same frequency are all the same dimensions
 
-        if(this.circleBoundingPref)
-        {
-          this.svg.selectAll("circle")
-            .data(this.words)
-            .join("circle")
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y)
-            .attr("r", d => d.r)
-            .attr("fill", d => d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
-            .attr("stroke", "black")
-            .attr("cursor", function(d){
-              d.shapeSvg = this; //save circle in word object--not sure where else to do it
-              return "pointer";
-            })
-            .on('mouseover', (event, d) => showWordFreqTooltip(d))
-            .on('mouseout', (event, d) => hideWordFreqTooltip(d));
-        }
+    fillerWords = this.splitBySemGroup(fillerWords);
 
-        if(this.rectBoundingPref)
+    let app = this;
+    for(let i=0; i<fillerWords.length; i++)
+    {
+      let cloud = d3cloud()
+        .words(fillerWords[i])
+        .size([this.dimPref, this.dimPref])
+        .font("sans-serif")
+        .rotate(0)
+        .fontSize(d => d.fontSize)
+        .padding(parseInt(this.paddingPref)+2) //so we can have a padding of 1 on the top and bottom
+        .random(() => .5) //important, overrides default placement function in d3-cloud and always starts spiral at center
+        .on("end", function() //when cloud generation is finished, create text in svg element
         {
-          this.svg.selectAll("rect")
-            .data(this.words)
-            .join("rect")
-            .attr("x", d =>  d.x-(d.width)/2)
-            .attr("y", d => d.y-(d.height/2))
-            .attr("width", d => d.width)
-            .attr("height", d => d.height)
-            .attr("fill", d => d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
-            //.attr("rx", d => d.fontSize*.3)
-            .attr("stroke", "black")
-            .attr("cursor", function(d){
-              d.shapeSvg = this; //save rectangle in word object--not sure where else to do it
-              return "pointer";
-            })
-            .on('mouseover', (event, d) => showWordFreqTooltip(d))
-            .on('mouseout', (event, d) => hideWordFreqTooltip(d));
-          this.words.forEach(function(d)
+          let size = this.size();
+          fillerWords[i].forEach(function(d)
           {
             let context = document.createElement("canvas").getContext("2d");
             context.font = d.fontSize+"px "+d.font;
-            d.y -= context.measureText(d.text).actualBoundingBoxDescent/2;
-          })
-        }
+            d.realWord.width = context.measureText(d.text).width;
+            d.realWord.x0 = d.x-d.realWord.width/2;
+            d.realWord.x1 = d.x0*-1;
+            d.realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
+          });
+          if(i===fillerWords.length-1)
+          {
+            let tempSvg = d3.create("svg")
+              .attr("width", app.dimPref)
+              .attr("height", app.dimPref);
 
-        this.svg.selectAll("text")
-          .data(this.words)
-          .join("text")
-          .attr("font-size", d => d.fontSize)
-          .attr("font-family", d => d.font)
-          .attr("text-anchor", "middle") //important
-          .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : (this.circleBoundingPref ? "middle" : "auto"))
-          .attr("fill", d => (this.circleBoundingPref || this.rectBoundingPref) ? "black" : d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScales[d.semGroup](d.frequency)))
-          .attr("x", d => d.x)
-          .attr("y", function(d)
+            fillerWords.forEach(function(p)
+            {
+              let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
+              let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
+              p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+            })
+
+            let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
+              .data(fillerWords)
+              .join("circle")
+              .attr("r", d => d.radius)
+              .attr("cx", app.dimPref/2)
+              .attr("cy", app.dimPref/2)
+
+            let simulation = d3.forceSimulation()
+              .force("center", d3.forceCenter(app.dimPref/2, app.dimPref/2))
+              .force("charge", d3.forceManyBody().strength(0.5))
+              .force("collide", d3.forceCollide(fillerWords).strength(.02).radius(d => d.radius))
+
+            simulation
+              .nodes(fillerWords)
+              .on("tick", function(){
+                node
+                  .attr("cx", d => d.x)
+                  .attr("cy", d => d.y)
+
+              })
+              .on("end", function()
+              {
+                for(let i=0; i<fillerWords.length; i++)
+                {
+                  for(let j=0; j<fillerWords[i].length; j++)
+                  {
+                    let word = fillerWords[i][j];
+                    word.x += fillerWords[i].x;
+                    word.y += fillerWords[i].y;
+                    word.realWord.x = word.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
+                    word.realWord.y = word.y-(word.fontSize*.45)-(word.fontSize*.1);
+                  }
+                }
+                app.createSvg();
+              });
+          }
+        });
+      cloud.start();
+    }
+  },
+  setCircleSvg : function()
+  {
+    let wordsBySemGroup = [];
+    for(let i=0; i<=d3.max(this.words, d => d.semGroup); i++) //create structure needed for d3 circle packing
+    {
+      wordsBySemGroup.push({"children" : this.words.filter(d => d.semGroup==i)})
+    }
+    let root = d3.hierarchy({
+      "children" : wordsBySemGroup})
+      .sum(d => d.hasOwnProperty("frequency") ? d.frequency : 0);
+
+    let pack = d3.pack()
+      .padding(this.paddingPref)
+      .size([this.dimPref, this.dimPref]);
+
+    pack(root); //use d3 circle packing to pack hierarchial circles (although the parent ones will be invisible)
+
+    root.descendants().forEach(function(d)
+    {
+      d.data.x = d.x; //add x, y, and r coords to data, AKA that item in words array, so they're more easily accessible
+      d.data.y = d.y;
+      d.data.r = d.r;
+    });
+    this.createSvg();
+  },
+
+  setSvgWithoutBoundingBox : function() //this method is slightly better than the rect one, but the two should still be combined
+  {
+    let wordsSplit = this.splitBySemGroup(this.words);
+    this.splitWord = wordsSplit;
+
+    let app = this;
+    for(let i=0; i<wordsSplit.length; i++)
+    {
+      let cloud = d3cloud()
+        .words(wordsSplit[i])
+        .size([this.dimPref, this.dimPref])
+        .font("sans-serif")
+        .rotate(0)
+        .fontSize(d => d.fontSize)
+        .padding(this.paddingPref)
+        .random(() => .5) //important
+        .on("end", function() //when cloud generation is finished, create text in svg element
+        {
+          if(i===wordsSplit.length-1)
           {
-            if(this.rectBoundingPref)
+            let tempSvg = d3.create("svg")
+              .attr("width", app.dimPref)
+              .attr("height", app.dimPref);
+
+            wordsSplit.forEach(function(p)
             {
-              let context = document.createElement("canvas").getContext("2d");
-              context.font = d.fontSize+"px "+d.font;
-              realWord.width = context.measureText(d.text).width;
-            }
-            else
-            {
-              return d.y;
-            }
-          })
-          .attr("cursor", function(d){
-            d.textSvg = this; //save text in word object--not sure where else to do it
-            return "pointer";
-          })
-          .attr("semGroup", d => d.semGroup)
-          .text(d => d.text)
-          .on('mouseover', (event, d) => showWordFreqTooltip(d))
-          .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+              let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
+              let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
+              p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
+            })
+
+            let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
+              .data(wordsSplit)
+              .join("circle")
+              .attr("r", d => d.radius)
+              .attr("cx", app.dimPref/2)
+              .attr("cy", app.dimPref/2)
+
+            let simulation = d3.forceSimulation()
+              .force("center", d3.forceCenter(app.dimPref/2, app.dimPref/2))
+              .force("charge", d3.forceManyBody().strength(.02))
+              .force("collide", d3.forceCollide(wordsSplit).strength(.02).radius(d => d.radius))
+
+            simulation
+              .nodes(wordsSplit)
+              .on("tick", function(){
+                node
+                  .attr("cx", d => d.x)
+                  .attr("cy", d => d.y)
+
+              })
+              .on("end", function()
+              {
+                for(let i=0; i<wordsSplit.length; i++)
+                {
+                  for(let j=0; j<wordsSplit[i].length; j++)
+                  {
+                    wordsSplit[i][j].x += wordsSplit[i].x;
+                    wordsSplit[i][j].y += wordsSplit[i].y;
+                  }
+                }
+                app.createSvg();
+              });
+          }
+        });
+      cloud.start();
+    };
+  },
+
+  createSvg : function()
+  {
+    this.colorPref.unshift("#444444"); //add gray to colors list for "-1" ungrouped group
     
-        let extraWordsTemp = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>this.widthPref/2 || d['__data__'].x<0-this.heightPref/2 || d['__data__'].y>this.heightPref/2 || d['__data__'].y<0-this.widthPref/2)).map(d => d['__data__']);
-        //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
-        this.extraWords = extraWordsTemp.concat(wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
-  
-        this.svg.append('rect')
-          .attr('id', 'wordFreqTooltipBackground')
-          .attr('fill', 'white')
-          .attr('stroke', 'black')
-          .attr('rx', '5')
-          .attr('display', 'none');
-  
-        this.svg.append('text')
-          .attr('id', 'wordFreqTooltip')
-          .attr('font-size', '16')
-          .attr('display', 'none');
-  
-        function showWordFreqTooltip(d)
-        {
-          d3.select('#wordFreqTooltip')
-            .text(d.text+": "+d.frequency+" instances")
-            .attr('x', d.x)
-            .attr('y', d.y+25)
-            .attr("text-anchor", "middle")
-            .attr('display', 'block');
-          d3.select(d.textSvg).attr('font-weight', 'bold');
-          if(d.shapeSvg!=undefined)
-          {
-            d3.select(d.shapeSvg).attr('stroke-width', '3');
-          }
-          let context = document.createElement("canvas").getContext("2d");
-          context.font = document.getElementById("wordFreqTooltip").getAttribute("font-size")+"px sans-serif";
-          let width = context.measureText(document.getElementById("wordFreqTooltip").innerHTML).width;
-          let height = document.getElementById("wordFreqTooltip").getAttribute("font-size");
-          d3.select("#wordFreqTooltipBackground")
-            .attr('height', parseInt(height)+6)
-            .attr('width', width+6)
-            .attr('x', d.x-width/2-3)
-            .attr('y', d.y+height/2+2)
-            .attr('display', 'block');
-        }
-  
-        function hideWordFreqTooltip(d)
-        {
-          d3.select('#wordFreqTooltip').text("");
-          d3.select('#wordFreqTooltip').attr('display', 'none');
-          d3.select(d.textSvg).attr('font-weight', 'normal');
-          if(d.shapeSvg!=undefined)
-          {
-            d3.select(d.shapeSvg).attr('stroke-width', '1');
-          }
-          d3.select("#wordFreqTooltipBackground").attr('display', 'none');
-        }
-      },
-      splitBySemGroup : function(arr)
+    let hslColors = this.colorPref.map(d => d3.hsl(d)); //convert color list to hsl so we can manipulate lightness value
+
+    let lightnessScale = d3.scaleLinear()
+        .domain([0, d3.max(this.words, d => d.frequency)])
+        .range([.8, .4]);
+
+    if(this.circleBoundingPref)
+    {
+      this.svg.selectAll("circle")
+        .data(this.words)
+        .join("circle")
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .attr("r", d => d.r)
+        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
+        .attr("stroke", "black")
+        .attr("cursor", function(d){
+          d.shapeSvg = this; //save circle in word object--not sure where else to do it
+          return "pointer";
+        })
+        .on('mouseover', (event, d) => showWordFreqTooltip(d)) //is there a better way to get the source?
+        .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+    }
+
+    if(this.rectBoundingPref)
+    {
+      this.svg.selectAll("rect")
+        .data(this.words)
+        .join("rect")
+        .attr("x", d =>  d.x-(d.width)/2)
+        .attr("y", d => d.y-(d.height/2))
+        .attr("width", d => d.width)
+        .attr("height", d => d.height)
+        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
+        .attr("stroke", "black")
+        .attr("cursor", function(d){
+          d.shapeSvg = this; //save rectangle in word object--not sure where else to do it
+          return "pointer";
+        })
+        .on('mouseover', (event, d) => showWordFreqTooltip(d)) 
+        .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+      this.words.forEach(function(d)
       {
-        let split = [];
-        for(let i=0; i<=d3.max(arr, d => d.semGroup); i++)
+        let context = document.createElement("canvas").getContext("2d");
+        context.font = d.fontSize+"px "+d.font;
+        d.y -= context.measureText(d.text).actualBoundingBoxDescent/2;
+      })
+    }
+
+    this.svg.selectAll("text")
+      .data(this.words)
+      .join("text")
+      .attr("font-size", d => d.fontSize)
+      .attr("font-family", d => d.font)
+      .attr("text-anchor", "middle") //important
+      .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : (this.circleBoundingPref ? "middle" : "auto"))
+      .attr("fill", (this.circleBoundingPref || this.rectBoundingPref) ? "black" : (d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup]))
+      .attr("x", d => d.x)
+      .attr("y", function(d)
+      {
+        if(this.rectBoundingPref) //this part never even gets reached (because this is no longer app); what is it trying to do? is it important?
         {
-          split.push(arr.filter(d => d.semGroup==i))
+          let context = document.createElement("canvas").getContext("2d");
+          context.font = d.fontSize+"px "+d.font;
+          realWord.width = context.measureText(d.text).width;
         }
-        return split;
+        else
+        {
+          return d.y;
+        }
+      })
+      .attr("cursor", function(d){
+        d.textSvg = this; //save text in word object--not sure where else to do it
+        return "pointer";
+      })
+      .attr("semGroup", d => d.semGroup)
+      .text(d => d.text)
+      .on('mouseover', (event, d) => showWordFreqTooltip(d))
+      .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+
+    //I'm really confused by this line and I don't remember where I was getting some of this from; should it be separated out into more lines?
+    let extraWordsTemp = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>this.dimPref/2 || d['__data__'].x<0-this.dimPref/2 || d['__data__'].y>this.dimPref/2 || d['__data__'].y<0-this.dimPref/2)).map(d => d['__data__']);
+    //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
+    this.extraWords = extraWordsTemp.concat(wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
+
+    this.svg.append('rect')
+      .attr('id', 'wordFreqTooltipBackground')
+      .attr('fill', 'white')
+      .attr('stroke', 'black')
+      .attr('rx', '5')
+      .attr('display', 'none');
+
+    this.svg.append('text')
+      .attr('id', 'wordFreqTooltip')
+      .attr('font-size', '16')
+      .attr('display', 'none');
+
+    function showWordFreqTooltip(word)
+    {
+      d3.select('#wordFreqTooltip')
+        .text(word.text+": "+word.frequency+" instances")
+        .attr('x', word.x)
+        .attr('y', word.y+25)
+        .attr("text-anchor", "middle")
+        .attr('display', 'block');
+      d3.select(word.textSvg).attr('font-weight', 'bold');
+      if(word.shapeSvg!=undefined)
+      {
+        d3.select(d.shapeSvg).attr('stroke-width', '3');
       }
-  };
+      let context = document.createElement("canvas").getContext("2d");
+      context.font = document.getElementById("wordFreqTooltip").getAttribute("font-size")+"px sans-serif";
+      let width = context.measureText(document.getElementById("wordFreqTooltip").innerHTML).width;
+      let height = document.getElementById("wordFreqTooltip").getAttribute("font-size");
+      d3.select("#wordFreqTooltipBackground")
+        .attr('height', parseInt(height)+6)
+        .attr('width', width+6)
+        .attr('x', (word.x-width/2)-3)
+        .attr('y', (word.y+height/2)+2)
+        .attr('display', 'block');
+    }
+
+    function hideWordFreqTooltip(word)
+    {
+      d3.select('#wordFreqTooltip').attr('display', 'none');
+      d3.select("#wordFreqTooltipBackground").attr('display', 'none');
+      d3.select(word.textSvg).attr('font-weight', 'normal');
+      if(word.shapeSvg!=undefined)
+      {
+        d3.select(word.shapeSvg).attr('stroke-width', '1');
+      }
+    }
+  },
+  splitBySemGroup : function(arr)
+  {
+    let split = [];
+    for(let i=0; i<=d3.max(arr, d => d.semGroup); i++)
+    {
+      split.push(arr.filter(d => d.semGroup==i))
+    }
+    return split;
+  }
+};
 });
