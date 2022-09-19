@@ -42,93 +42,88 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .attr("width", this.dimPref)
         .attr("height", this.dimPref);
 
-      if(this.rectBoundingPref)
-      {
-        this.setRectSvg();
-      }
-      else if(this.circleBoundingPref)
+      if(this.circleBoundingPref)
       {
         this.setCircleSvg();
       }
+      if(this.rectBoundingPref)
+      {
+        let context = document.createElement("canvas").getContext("2d");
+        context.font = "10px "+this.words[0].font;
+
+        let widestWord = this.words[0];
+        this.words.forEach(function(d) //find widest word, which we'll use to determine width for all bounding boxes
+        {
+          if(context.measureText(widestWord.text).width<context.measureText(d.text).width)
+          {
+            widestWord = d;
+          }
+        });
+        context.font = widestWord.fontSize+"px "+widestWord.font;
+
+        let widestWordWidth = context.measureText(widestWord.text).width;
+        let fillerStr="";
+        while(context.measureText(fillerStr).width<=widestWordWidth)
+        {//create string composed of Full Block characters that is at least as long as the width of the widest word
+          fillerStr+=String.fromCharCode(9608);
+        }
+        fillerStr+=String.fromCharCode(9608);
+        //this filler string is what will be fed to d3-cloud to place, guaranteeing any potential ascenders and descenders are accounted for in placement
+        //as far as d3-cloud knows, words of the same frequency/font size will be completely identical, and all words are made up of identical characters, just scaled using font size
+
+        let fillerWords = []; //create array of "filler words", which will be placed by d3-cloud instead of this.words
+        this.words.forEach(d => fillerWords.push({
+            text : fillerStr,
+            realWord : d,
+            fontSize : d.fontSize,
+            font : d.font,
+            frequency : d.frequency,
+            semGroup : d.semGroup
+        }));
+        this.setWithoutBoundingOrRectSvg(fillerWords);
+      }
       else
       {
-        this.setSvgWithoutBoundingBox();
+        this.setWithoutBoundingOrRectSvg(this.words);
       }
   },
-
-  setRectSvg : function() //this method is a mess
+  
+  setWithoutBoundingOrRectSvg : function(wordsToUse) //wordsToUse is a necessary parameter because when there are rectangular bounding boxes, a fillerWords array must be fed to this method instead of this.words
   {
-    let context = document.createElement("canvas").getContext("2d");
-    context.font = "10px "+this.words[0].font;
-
-    let widestWord = this.words[0];
-    this.words.forEach(function(d)
+    let wordsSplit = [];
+    for(let i=0; i<=d3.max(wordsToUse, d => d.semGroup); i++)
     {
-      if(context.measureText(widestWord.text).width<context.measureText(d.text).width)
-      {
-        widestWord = d;
-      }
-    });
-    console.log(widestWord);
-    context.font = widestWord.fontSize+"px "+widestWord.font;
+      wordsSplit.push(wordsToUse.filter(d => d.semGroup==i))
+    } //create 2d array, splitting given words into separate arrays by semGroup attribute
 
-    let widestWordWidth = context.measureText(widestWord.text).width;
-    let fillerStr="";
-    while(context.measureText(fillerStr).width<widestWordWidth+8)
-    {
-      fillerStr+=String.fromCharCode(9608);
-    }
-
-    let fillerWords = [];
-    this.words.forEach(d => fillerWords.push({
-        text : fillerStr,
-        realWord : d,
-        fontSize : d.fontSize,
-        font : d.font,
-        frequency : d.frequency,
-        semGroup : d.semGroup
-      })); //fake words to "trick" d3-cloud into thinking words of the same frequency are all the same dimensions
-
-    fillerWords = this.splitBySemGroup(fillerWords);
-
-    let app = this;
-    for(let i=0; i<fillerWords.length; i++)
+    let app = this; //save object here, otherwise we won't have access to it once we call d3-cloud
+    for(let i=0; i<wordsSplit.length; i++) //iterate through each semantic group and individually place them using d3-cloud
     {
       let cloud = d3cloud()
-        .words(fillerWords[i])
+        .words(wordsSplit[i])
         .size([this.dimPref, this.dimPref])
         .font("sans-serif")
         .rotate(0)
         .fontSize(d => d.fontSize)
-        .padding(parseInt(this.paddingPref)+2) //so we can have a padding of 1 on the top and bottom
-        .random(() => .5) //important, overrides default placement function in d3-cloud and always starts spiral at center
-        .on("end", function() //when cloud generation is finished, create text in svg element
+        .padding(this.paddingPref)
+        .random(() => .5) //important; always start each word's spiral in center so that largest words are in center
+        .on("end", function()
         {
-          let size = this.size();
-          fillerWords[i].forEach(function(d)
+          if(i===wordsSplit.length-1) //when cloud generation is finished and all semantic groups have been placed:
           {
-            let context = document.createElement("canvas").getContext("2d");
-            context.font = d.fontSize+"px "+d.font;
-            d.realWord.width = context.measureText(d.text).width;
-            d.realWord.x0 = d.x-d.realWord.width/2;
-            d.realWord.x1 = d.x0*-1;
-            d.realWord.height = Math.abs(d.y0)+d.y1-(d.fontSize*.9)+(d.fontSize*.2);
-          });
-          if(i===fillerWords.length-1)
-          {
-            let tempSvg = d3.create("svg")
+            let tempSvg = d3.create("svg") //temporary svg we will use to run force simulation on without interfering with real svg that is visible
               .attr("width", app.dimPref)
               .attr("height", app.dimPref);
 
-            fillerWords.forEach(function(p)
+            wordsSplit.forEach(function(p)
             {
               let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
               let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
               p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-            })
+            }) //calculate approximate largest distance across each semantic group and use this to find a radius if it were a circle
 
             let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
-              .data(fillerWords)
+              .data(wordsSplit)
               .join("circle")
               .attr("r", d => d.radius)
               .attr("cx", app.dimPref/2)
@@ -136,28 +131,42 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
             let simulation = d3.forceSimulation()
               .force("center", d3.forceCenter(app.dimPref/2, app.dimPref/2))
-              .force("charge", d3.forceManyBody().strength(0.5))
-              .force("collide", d3.forceCollide(fillerWords).strength(.02).radius(d => d.radius))
+              .force("charge", d3.forceManyBody().strength(.02))
+              .force("collide", d3.forceCollide(wordsSplit).strength(.02).radius(d => d.radius))
 
-            simulation
-              .nodes(fillerWords)
+            simulation //run force simulation to pack semantic groups (imagining they are circles) without them colliding
+              .nodes(wordsSplit)
               .on("tick", function(){
                 node
                   .attr("cx", d => d.x)
                   .attr("cy", d => d.y)
 
               })
-              .on("end", function()
+              .on("end", function() //when the simulation is finished and groups have been placed:
               {
-                for(let i=0; i<fillerWords.length; i++)
+                for(let i=0; i<wordsSplit.length; i++)
                 {
-                  for(let j=0; j<fillerWords[i].length; j++)
+                  for(let j=0; j<wordsSplit[i].length; j++)
                   {
-                    let word = fillerWords[i][j];
-                    word.x += fillerWords[i].x;
-                    word.y += fillerWords[i].y;
-                    word.realWord.x = word.x; //coordinates assume (0, 0) is the center and will be negative if they're to the left/top of the center point, so adjust here
-                    word.realWord.y = word.y-(word.fontSize*.45)-(word.fontSize*.1);
+                    let word = wordsSplit[i][j];
+                    if(app.rectBoundingPref)
+                    {//in the case of rectangular bounding boxes, the current "words" are just fillerWords, so relay all the coordinate information just determined to their realWord attribute (their corresponding word in app.words)
+                      word.realWord.x = word.x+wordsSplit[i].x;
+                      word.realWord.y = word.y+wordsSplit[i].y;
+                      let context = document.createElement("canvas").getContext("2d");
+                      context.font = word.realWord.fontSize+"px "+word.realWord.font;
+                      word.realWord.width = context.measureText(word.text).width; //d3-cloud rounds width up to the nearest 32 pixels, so calculate the word's real width here in order to make sure bounding boxes aren't unnecessarily wide
+                      word.realWord.height = word.fontSize*1.25;
+                      word.realWord.x0 = -word.realWord.width/2;
+                      word.realWord.x1 = word.realWord.x0*-1;
+                      word.realWord.y0 = word.y0-(word.realWord.fontSize*.1);
+                      word.realWord.y1 = word.realWord.y0*-1;
+                    }
+                    else
+                    {//adjust each word by the x and y coordinates for their semantic group, since all the groups are currently in the corner
+                      word.x += wordsSplit[i].x;
+                      word.y += wordsSplit[i].y;
+                    }
                   }
                 }
                 app.createSvg();
@@ -165,8 +174,9 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           }
         });
       cloud.start();
-    }
+    };
   },
+
   setCircleSvg : function()
   {
     let wordsBySemGroup = [];
@@ -191,75 +201,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       d.data.r = d.r;
     });
     this.createSvg();
-  },
-
-  setSvgWithoutBoundingBox : function() //this method is slightly better than the rect one, but the two should still be combined
-  {
-    let wordsSplit = this.splitBySemGroup(this.words);
-    this.splitWord = wordsSplit;
-
-    let app = this;
-    for(let i=0; i<wordsSplit.length; i++)
-    {
-      let cloud = d3cloud()
-        .words(wordsSplit[i])
-        .size([this.dimPref, this.dimPref])
-        .font("sans-serif")
-        .rotate(0)
-        .fontSize(d => d.fontSize)
-        .padding(this.paddingPref)
-        .random(() => .5) //important
-        .on("end", function() //when cloud generation is finished, create text in svg element
-        {
-          if(i===wordsSplit.length-1)
-          {
-            let tempSvg = d3.create("svg")
-              .attr("width", app.dimPref)
-              .attr("height", app.dimPref);
-
-            wordsSplit.forEach(function(p)
-            {
-              let boundsX = [d3.min(p, d => d.x+d.x0), d3.max(p, d => d.x+d.x1)];
-              let boundsY = [d3.min(p, d => d.y+d.y0), d3.max(p, d => d.y+d.y1)];
-              p.radius = Math.max(boundsX[1]-boundsX[0], boundsY[1]-boundsY[0])/2;
-            })
-
-            let node = tempSvg.selectAll("circle") //based on Yan Holtz (https://d3-graph-gallery.com/graph/circularpacking_basic.html)
-              .data(wordsSplit)
-              .join("circle")
-              .attr("r", d => d.radius)
-              .attr("cx", app.dimPref/2)
-              .attr("cy", app.dimPref/2)
-
-            let simulation = d3.forceSimulation()
-              .force("center", d3.forceCenter(app.dimPref/2, app.dimPref/2))
-              .force("charge", d3.forceManyBody().strength(.02))
-              .force("collide", d3.forceCollide(wordsSplit).strength(.02).radius(d => d.radius))
-
-            simulation
-              .nodes(wordsSplit)
-              .on("tick", function(){
-                node
-                  .attr("cx", d => d.x)
-                  .attr("cy", d => d.y)
-
-              })
-              .on("end", function()
-              {
-                for(let i=0; i<wordsSplit.length; i++)
-                {
-                  for(let j=0; j<wordsSplit[i].length; j++)
-                  {
-                    wordsSplit[i][j].x += wordsSplit[i].x;
-                    wordsSplit[i][j].y += wordsSplit[i].y;
-                  }
-                }
-                app.createSvg();
-              });
-          }
-        });
-      cloud.start();
-    };
   },
 
   createSvg : function()
@@ -295,8 +236,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       this.svg.selectAll("rect")
         .data(this.words)
         .join("rect")
-        .attr("x", d =>  d.x-(d.width)/2)
-        .attr("y", d => d.y-(d.height/2))
+        .attr("x", d => d.x0+d.x)
+        .attr("y", d => d.y0+d.y)
         .attr("width", d => d.width)
         .attr("height", d => d.height)
         .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
@@ -320,23 +261,11 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       .join("text")
       .attr("font-size", d => d.fontSize)
       .attr("font-family", d => d.font)
-      .attr("text-anchor", "middle") //important
-      .attr("alignment-baseline", this.rectBoundingPref ? "mathematical" : (this.circleBoundingPref ? "middle" : "auto"))
+      .attr("text-anchor", "middle") //important for rendering in the way d3-cloud intended
+      .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
       .attr("fill", (this.circleBoundingPref || this.rectBoundingPref) ? "black" : (d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup]))
       .attr("x", d => d.x)
-      .attr("y", function(d)
-      {
-        if(this.rectBoundingPref) //this part never even gets reached (because this is no longer app); what is it trying to do? is it important?
-        {
-          let context = document.createElement("canvas").getContext("2d");
-          context.font = d.fontSize+"px "+d.font;
-          realWord.width = context.measureText(d.text).width;
-        }
-        else
-        {
-          return d.y;
-        }
-      })
+      .attr("y", d => d.y)
       .attr("cursor", function(d){
         d.textSvg = this; //save text in word object--not sure where else to do it
         return "pointer";
@@ -374,7 +303,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       d3.select(word.textSvg).attr('font-weight', 'bold');
       if(word.shapeSvg!=undefined)
       {
-        d3.select(d.shapeSvg).attr('stroke-width', '3');
+        d3.select(word.shapeSvg).attr('stroke-width', '3');
       }
       let context = document.createElement("canvas").getContext("2d");
       context.font = document.getElementById("wordFreqTooltip").getAttribute("font-size")+"px sans-serif";
@@ -398,15 +327,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         d3.select(word.shapeSvg).attr('stroke-width', '1');
       }
     }
-  },
-  splitBySemGroup : function(arr)
-  {
-    let split = [];
-    for(let i=0; i<=d3.max(arr, d => d.semGroup); i++)
-    {
-      split.push(arr.filter(d => d.semGroup==i))
-    }
-    return split;
   }
 };
 });
