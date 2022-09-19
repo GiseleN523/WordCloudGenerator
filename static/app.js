@@ -46,7 +46,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       {
         this.setCircleSvg();
       }
-      if(this.rectBoundingPref)
+      else if(this.rectBoundingPref)
       {
         let context = document.createElement("canvas").getContext("2d");
         context.font = "10px "+this.words[0].font;
