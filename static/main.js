@@ -37,16 +37,12 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
       reader.readAsText(fileInput.files[0]);
       reader.onload = function()
       {
-        app.createCloud(reader.result);
-        document.getElementById("wordCount").innerHTML = " | Number of Unique Words (excluding stop words): "+(app.words.length+app.extraWords.length);
-        displayCloud(app.svg.node());
+        app.createCloud(reader.result, () => displayCloud(app.svg.node()));
       };
     }
     else if(!fileUploadLast && textInput.value.length>0) //create file from textarea input box
     {
-      app.createCloud(textInput.value);
-      document.getElementById("wordCount").innerHTML = " | Number of Unique Words (excluding stop words): "+(app.words.length+app.extraWords.length);
-      displayCloud(app.svg.node());
+      app.createCloud(textInput.value, () => displayCloud(app.svg.node()));
     }
   }
 
@@ -113,11 +109,13 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   }
 
   function displayCloud(svg)
-  {
+  {    
     document.getElementById("wordCloudPreview").append(svg);
 
     document.getElementById("downloadSvgButton").style.display = "block";
     document.getElementById("downloadSvgButton").onclick = () => svgExportJS.downloadSvg(app.svg.node(), "yourwordcloud");
+
+    document.getElementById("wordCount").innerHTML = " | Number of Unique Words (excluding stop words): "+(app.words.length+app.extraWords.length);
 
     document.getElementById("extraWords").style.display = "block";
     document.getElementById("extraWordsList").innerHTML = "";

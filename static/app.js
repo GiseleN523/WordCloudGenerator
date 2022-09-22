@@ -19,7 +19,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     colorPref : d3.schemeTableau10,
     rectBoundingPref : false,
     circleBoundingPref : false,
-    createCloud : function(wordsRaw)
+    createCloud : function(wordsRaw, onEndFunction) //function to call when cloud is done, passed by main
     {
       wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
       this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
@@ -44,7 +44,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
       if(this.circleBoundingPref)
       {
-        this.setCircleSvg();
+        this.setCircleSvg(onEndFunction);
       }
       else if(this.rectBoundingPref)
       {
@@ -80,15 +80,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
             frequency : d.frequency,
             semGroup : d.semGroup
         }));
-        this.setWithoutBoundingOrRectSvg(fillerWords);
+        this.setWithoutBoundingOrRectSvg(fillerWords, onEndFunction);
       }
       else
       {
-        this.setWithoutBoundingOrRectSvg(this.words);
+        this.setWithoutBoundingOrRectSvg(this.words, onEndFunction);
       }
   },
   
-  setWithoutBoundingOrRectSvg : function(wordsToUse) //wordsToUse is a necessary parameter because when there are rectangular bounding boxes, a fillerWords array must be fed to this method instead of this.words
+  setWithoutBoundingOrRectSvg : function(wordsToUse, onEndFunction) //wordsToUse is a necessary parameter because when there are rectangular bounding boxes, a fillerWords array must be fed to this method instead of this.words
   {
     let wordsSplit = [];
     for(let i=0; i<=d3.max(wordsToUse, d => d.semGroup); i++)
@@ -109,6 +109,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .random(() => .5) //important; always start each word's spiral in center so that largest words are in center
         .on("end", function()
         {
+          let date = new Date();
+          let time = date.getTime();
           if(i===wordsSplit.length-1) //when cloud generation is finished and all semantic groups have been placed:
           {
             let tempSvg = d3.create("svg") //temporary svg we will use to run force simulation on without interfering with real svg that is visible
@@ -131,11 +133,12 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
             let simulation = d3.forceSimulation()
               .force("center", d3.forceCenter(app.dimPref/2, app.dimPref/2))
-              .force("charge", d3.forceManyBody().strength(.02))
-              .force("collide", d3.forceCollide(wordsSplit).strength(.02).radius(d => d.radius))
+              .force("charge", d3.forceManyBody().strength(.2))
+              .force("collide", d3.forceCollide(wordsSplit).strength(.2).radius(d => d.radius))
 
             simulation //run force simulation to pack semantic groups (imagining they are circles) without them colliding
               .nodes(wordsSplit)
+              .alphaMin([0.75]) //only run simulation 25% of the way, to get an approximation that doesn't take as long
               .on("tick", function(){
                 node
                   .attr("cx", d => d.x)
@@ -144,6 +147,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
               })
               .on("end", function() //when the simulation is finished and groups have been placed:
               {
+                let date1 = new Date();
+                console.log(date1.getTime()-date.getTime())
                 for(let i=0; i<wordsSplit.length; i++)
                 {
                   for(let j=0; j<wordsSplit[i].length; j++)
@@ -169,7 +174,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
                     }
                   }
                 }
-                app.createSvg();
+                app.createSvg(onEndFunction);
               });
           }
         });
@@ -177,7 +182,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     };
   },
 
-  setCircleSvg : function()
+  setCircleSvg : function(onEndFunction)
   {
     let wordsBySemGroup = [];
     for(let i=0; i<=d3.max(this.words, d => d.semGroup); i++) //create structure needed for d3 circle packing
@@ -200,10 +205,10 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       d.data.y = d.y;
       d.data.r = d.r;
     });
-    this.createSvg();
+    this.createSvg(onEndFunction);
   },
 
-  createSvg : function()
+  createSvg : function(onEndFunction)
   {
     this.colorPref.unshift("#444444"); //add gray to colors list for "-1" ungrouped group
     
@@ -327,6 +332,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         d3.select(word.shapeSvg).attr('stroke-width', '1');
       }
     }
+    onEndFunction(); //finally call function that was passed by main at the beginning of createCloud() to perform at end of cloud generation
   }
 };
 });
