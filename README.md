@@ -15,14 +15,19 @@ The basis for our word cloud generator is [Jason Davies' d3-cloud javascript lib
 
 d3-cloud was very helpful for basic placing of the words, but there was still a lot of data preparation involved (getting user settings and reacting to them, counting the frequencies of each word in the text, calculating font size based on their frequency, and determining semantic groups), as well as work afterwards (transferring the coordinates given by d3-cloud into actual svg graphics, placing multiple clouds without them colliding when semantic groups are used, and adding in our own features like bounding boxes and lightness).
 
-<img src="img/semantic_cloud.svg" alt="A word cloud with words grouped into five separate, color-coded, semantic-based groups" style="height: 600px"/>
-A word cloud with semantic grouping
-<img src="img/rectbounding_cloud.svg" alt="A word cloud with words color-coded and separated into semantic groups, along with proportionally scaled rectangular boxes around each word" style="height: 600px"/>
-A word cloud with semantic grouping and rectangular bounding boxes
-<img src="img/circularbounding_cloud.svg" alt="A word cloud with words color-coded and separated into semantic groups, along with proportionally scaled circular boxes around each word" style="height: 600px"/>
-A word cloud with semantic grouping and circular bounding boxes
-
 ### Our Features
+
+A word cloud with semantic grouping:
+
+<img src="img/semantic_cloud.svg" alt="A word cloud with words grouped into five separate, color-coded, semantic-based groups" style="height: 400px"/>
+
+A word cloud with semantic grouping and rectangular bounding boxes:
+
+<img src="img/rectbounding_cloud.svg" alt="A word cloud with words color-coded and separated into semantic groups, along with proportionally scaled rectangular boxes around each word" style="height: 400px"/>
+
+A word cloud with semantic grouping and circular bounding boxes:
+
+<img src="img/circularbounding_cloud.svg" alt="A word cloud with words color-coded and separated into semantic groups, along with proportionally scaled circular boxes around each word" style="height: 400px"/>
 
 Based on our research, we decided to use a redundant encoding of font size and lightness to make comparisons of the relative frequency of words easier. To do this, we used D3’s built-in scales, which allowed us to specify an input domain (for example, from 1 to the highest frequency in the current text) and receive a scaled output in the range we specified (for example, a font size between 10 and 40). In order to create an output range for lightness, we converted the user’s chosen color from the standard rgb (red, green, blue) format to hsl (hue, saturation, lightness). We decided to always scale the lightness between .8 and .4 to ensure that the small and big words would still be readable no matter the lightness of the original color the user chose.
 
@@ -34,11 +39,11 @@ Semantic grouping is based on k-means clustering of a [word vector dataset that 
 
 ### The Web Interface
 
+<img src="img/interface.png" alt="A screenshot of our User Interface" style="height: 600px"/>
+
 The main logic of our program was written using Javascript, but our website interface was written in HTML and CSS, using Python’s Flask module. Our interface allows for file input and copy/paste raw text input. We included many different settings that the user can specify, such as the maximum number of words in the cloud, font size, a stop words list, the number of semantic groups, and color. The user can also view the words not included in their cloud with their frequencies, along with being able to download the word cloud as a svg file.
 
 Our code is modularized so that our basic word cloud generator functionality can be used on its own without our interface, such as by importing it into Observable Notebooks (observablehq.com). In order to import our code into Observable, we had to learn how to make sure it met the Asynchronous Module Definition (AMD) specification, a specific organizational format that is required by Observable.
-
-<img src="img/interface.png" alt="A screenshot of our User Interface" style="height: 600px"/>
 
 ### Future Improvements:
 - Allow user to choose semantic grouping algorithm and training dataset used for semantic grouping
