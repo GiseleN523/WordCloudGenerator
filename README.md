@@ -5,11 +5,22 @@ A word cloud is a data visualization that encodes information about a text in th
 
 Word clouds are popular, but they easily become less effective when font size, rotation, and color are misused, and, additionally, because of perceptual biases that are inherent in a visualization like this. Our research group at Carleton College (Northfield, MN) decided to create a research-based word cloud generator, choosing features that would target specific biases common in word clouds. Our tool includes features such as the capability of controlling maximum font size and padding, editing a list of stop words, and specifying a color scheme, among others. We also include the ability to use lightness along with font size as a redundant encoding on word frequency, to split words into semantic groups, and to add either rectangular or circular bounding boxes around individual words.
 
-### Creating Clouds
+### How to Run Our Code
+
+Our project uses the Flask module, and so the the program is launched using the wordcloud.py file, located in the root folder. Run this file (using the command `python wordcloud.py`) and you should receive a URL which you can paste into your browser to view our page locally hosted.
+
+### Using the d3-cloud Library and Creating Clouds
 
 The basis for our word cloud generator is [Jason Davies' d3-cloud javascript library](https://github.com/jasondavies/d3-cloud), which, in turn, is built using [D3](https://d3js.org/), a data visualization library for javascript. d3-cloud allowed us to feed in words and their font sizes and then placed them in a spiral shape (as is common with word clouds) without collisions. By looking at individual pixels, d3-cloud allowed us to closely pack words in the empty spaces left over and took care of what would otherwise have been tricky collision detection.
 
 d3-cloud was very helpful for basic placing of the words, but there was still a lot of data preparation involved (getting user settings and reacting to them, counting the frequencies of each word in the text, calculating font size based on their frequency, and determining semantic groups), as well as work afterwards (transferring the coordinates given by d3-cloud into actual svg graphics, placing multiple clouds without them colliding when semantic groups are used, and adding in our own features like bounding boxes and lightness).
+
+<img src="img/semantic_cloud.svg" alt="A word cloud with words grouped into five separate, color-coded, semantic-based groups" style="height: 600px"/>
+A word cloud with semantic grouping
+<img src="img/rectbounding_cloud.svg" alt="A word cloud with words color-coded and separated into semantic groups, along with proportionally scaled rectangular boxes around each word" style="height: 600px"/>
+A word cloud with semantic grouping and rectangular bounding boxes
+<img src="img/circularbounding_cloud.svg" alt="A word cloud with words color-coded and separated into semantic groups, along with proportionally scaled circular boxes around each word" style="height: 600px"/>
+A word cloud with semantic grouping and circular bounding boxes
 
 ### Our Features
 
@@ -27,12 +38,10 @@ The main logic of our program was written using Javascript, but our website inte
 
 Our code is modularized so that our basic word cloud generator functionality can be used on its own without our interface, such as by importing it into Observable Notebooks (observablehq.com). In order to import our code into Observable, we had to learn how to make sure it met the Asynchronous Module Definition (AMD) specification, a specific organizational format that is required by Observable.
 
+<img src="img/interface.png" alt="A screenshot of our User Interface" style="height: 600px"/>
+
 ### Future Improvements:
 - Allow user to choose semantic grouping algorithm and training dataset used for semantic grouping
 - Dynamically update cloud without having to fully regenerate it each time
 - Improve user interface
 - Host tool on Observable Notebooks
-
-### How to Run Our Code
-
-Our project uses the Flask module, and so the the program is launched using the wordcloud.py file, located in the root folder. Run this file (using the command `python wordcloud.py`) and you should receive a URL which you can paste into your browser to view our page locally hosted.
