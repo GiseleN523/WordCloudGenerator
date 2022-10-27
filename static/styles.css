@@ -1,20 +1,44 @@
 body
 {
     font-family: sans-serif;
-    margin-top: 3%;
+    display: flex;
+    width: 100%;
 }
 
-form div
-{
-    margin: 1%;
-}
-
-form div label, #rightContentColumn h3
+.prefGroupContent div label
 {
     display: inline-block;
     text-align: right;
-    width: 25%;
+    width: 50%;
     padding-right: 5px;
+}
+
+.prefGroup
+{
+    width: 95%;
+    margin-bottom: 2%;
+}
+
+.prefGroup h3
+{
+    background-color: #003069;
+    color: white;
+    display: block;
+    padding: 1em;
+    cursor: pointer;
+    margin: 0px;
+}
+
+.prefGroupContent
+{
+    background-color: #eeeeee;
+    padding: .5em;
+    margin: 0px;
+}
+
+.prefGroupContent div
+{
+    padding: .5em;
 }
 
 button
@@ -33,39 +57,46 @@ button:hover
     border-radius: 6px;
 }
 
-form div input
+.prefGroupContent div input
 {
     text-align: left;
 }
 
-form input[type="text"]
+.prefGroupContent div input[type="text"]
 {
-    width: 4em
+    width: 4em;
 }
 
 #leftContentColumn
 {
-    width: 700px;
-    float: left;
-    margin: 0px 2% 20% 1%;
+    flex: 93vh;
+}
+
+#rightContentColumn
+{
+    flex: auto;
 }
 
 #wordCloudPreview
 {
-    width: 100%;
+    height: 93vh;
+    min-width: 50px;
+    max-height: 1000px;
+    min-height: 400px;
     aspect-ratio: 1;
     border: 2px solid black;
     border-radius: 5px;
-}
-
-#fileInput, #rawTextInput
-{
-    margin-top: 3%;
+    position: fixed;
 }
 
 #rawTextInput
 {
     width: 100%;
+}
+
+#fileInput, #rawTextInput
+{
+    margin-top: 3%;
 }
 
 #extraWords
@@ -89,6 +120,7 @@ form input[type="text"]
     border-radius: 2em;
     padding: .1em .3em;
     cursor: pointer;
+    background-color: white;
 }
 
 .tooltipContent

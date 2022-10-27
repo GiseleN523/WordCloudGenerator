@@ -5,148 +5,159 @@
 <body>
     <div id="leftContentColumn">
         <div id="wordCloudPreview"></div>
-        <input id ="fileInput" type="file" accept=".txt">
-        <span id="wordCount"></span><br>
-        <textarea id="rawTextInput" rows="15" placeholder="Your text here"></textarea>
     </div>
     <div id="rightContentColumn">
-        <h3>Preferences</h3>
+        <div id="textInputGroup" class="prefGroup">
+            <h3>Text Source</h3>
+            <div class="prefGroupContent">
+                <input id="fileInput" type="file" accept=".txt">
+                <span id="wordCount"></span><br>
+                <textarea id="rawTextInput" rows="10" placeholder="Or paste your text here"></textarea>
+            </div>
+        </div>
         <form>
-            <div>
-                <label for="numWordsPref">Maximum Number of Words to Include</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li>This is the highest number of words that can be included in the cloud</li>
-                    <li>If there are multiple words with the same frequency, we choose choose ommitting them all over including some and leaving some out to satisfy the maximum word value</li>
-                </span></span>
-                <input type="text" id="numWordsPref" value="100">
+            <div id="wordsGroup" class="prefGroup">
+                <h3>Words to Include</h3>
+                <div class="prefGroupContent">
+                    <div>
+                        <label for="numWordsPref">Maximum Number of Words to Include</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li>This is the highest number of words that can be included in the cloud</li>
+                            <li>If there are multiple words with the same frequency, we choose ommitting them all over including some and leaving some out to satisfy the maximum word value</li>
+                        </span></span>
+                        <input type="text" id="numWordsPref" value="100">
+                    </div>
+                    <div>
+                        <label for="minCountPref">Only Include Words With Word Counts Above</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            This can be used to specify the smallest word count you consider significant in the scope of your text and would like included in the cloud.
+                        </span></span>
+                        <input type="text" id="minCountPref" value="1">
+                    </div>
+                    <div>
+                        <label for="stopWordsPref">Don't Include Stop Words</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li>"Stop words" are often used when interacting with text data to remove common words such as "it" and "but" that are found in many texts and don't give much information about this text in particular</li>
+                            <li>This field can also be used to remove unwanted numbers, symbols, or strange punctuation</li>
+                        </span></span>
+                        <input type="checkbox" id="stopWordsPref" checked>
+                    </div>
+                    <div id="stopWordsBoxPrefDiv">
+                        <label></label>
+                        <textarea id="stopWordsBoxPref" cols="40" rows="5"></textarea>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="minCountPref">Only Include Words With Word Counts Above</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    This can be used to specify the smallest word count you consider significant in the scope of your text and would like included in the cloud.
-                </span></span>
-                <input type="text" id="minCountPref" value="1">
-            </div>
-            <div>
-                <label for="fontSizePref">Largest Font Size</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li><a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
-                        Position, size, and color brightness are good ways of encoding ordinal (ordered) data such as word count
-                    </a></li>
-                    <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
-                        The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
-                    </a></li>
-                </span></span>
-                <input type="range" min="20" max="80" id="fontSizePref" value="40">
-                <span id="fontSizeLabel">40</span>
-            </div>
-            <div>
-                <label for="paddingPref">Padding Between Words (pixels)</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li><a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
-                        Layouts with white space tend to be preferred over more tightly packed, less organized looking layouts
-                    </a></li>
-                    <li><a href="https://drive.google.com/file/d/1VoLi7vJyOhetQ9VPU0PK0KoyO8cjaNyw/view" target="_blank">
-                        It is possible that designs which cluster words more closely could cause people to overlook or struggle to read some words, based on experiments dealing with crowding of letters
-                    </a></li>
-                </span></span>
-                <input type="range" min="0" max="12" id="paddingPref" value="3">
-                <span id="paddingLabel">3</span>
-            </div>
-            <div>
-                <label for="stopWordsPref">Don't Include Stop Words</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li>"Stop words" are often used when interacting with text data to remove common words such as "it" and "but" that are found in many texts and don't give much information about this text in particular</li>
-                    <li>This field can also be used to remove unwanted numbers, symbols, or strange punctuation</li>
-                </span></span>
-                <input type="checkbox" id="stopWordsPref" checked>
-            </div>
-            <div id="stopWordsBoxPrefDiv">
-                <label></label>
-                <textarea id="stopWordsBoxPref" cols="40" rows="5"></textarea>
-            </div>
-            <div>
-                <label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li><a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
-                        Position, size, and color brightness are good ways of encoding ordinal (ordered) data such as word count
-                    </a></li>
-                    <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
-                        The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
-                    </a></li>
-                    <li><a href="https://drive.google.com/file/d/1VqDPsrmZsgi6_Ka4QtYWkG1rS0Fy5iaJ/view" target="_blank">
-                        Having multiple "channels" that encode the same information reinforces the differences and makes them easier to spot
-                    </a></li>
-                    <li><a href="https://drive.google.com/file/d/1VgMbG5tpxD9vC_2mBQNaFYbga9dH-4gr/view" target="_blank">
-                        In this experiment, font size perception was affected by lightness, but lightness perception didn’t seem to be affected by font size, possibly explained by the fact that dark shapes tend to look bigger
-                    </a></li>
-                </span></span>
-                <input type="checkbox" id="lightnessPref" checked>
-            </div>
-            <div>
-                <label for="semanticPref">Number of Semantic Groups</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li><a href="https://dl.acm.org/doi/10.1007/978-3-642-03655-2_43" target="_blank">
-                        Organizing words thematically can mostly eliminate a bias that causes people to pay more attention to the upper-left-hand words
-                    </a></li>
-                    <li><a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
-                        Visually subdividing and semantically organizing words is effective in improving people's accuracy with time-constrained, category understanding tasks
-                    </a></li>
-                    <li><a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
-                        Layouts with white space tend to be preferred over more tightly packed, less organized looking layouts
-                    </a></li>
-                    <li><a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
-                        Position, hue, and shape are good ways to encode nominal (categorical) data such as topic
-                    </a></li>
-                    <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
-                        According to the Gestalt school of psychology, objects that are close together or that are similar are seen as a group 
-                    </a></li>
-                </span></span>
-                <input type="range" id="semanticPref" min="1" max="9" value="5">
-                <span id="semanticLabel">5</span>
-            </div>
-            <div id="colorPref"><label for="colorPref">Color</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
-                        The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
-                    </a></li>
-                </span></span>
-                <select name="groupColorPref" id="groupColorPref"></select>
-            </div>
-            <div id="customColors">
-                <input type="color">
-                <input type="color">
-                <input type="color">
-                <input type="color">
-                <input type="color">
-                <input type="color">
-                <input type="color">
-                <input type="color">
-                <input type="color">
-            </div>
-            <div>
-                <label for="rectBoundingPref">Rectangular Bounding Boxes Around Words</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li>When given a longer word or a word with ascenders and descenders such as p's and t's, people tend to think it is bigger than it is</li>
-                    <li><a href="https://drive.google.com/file/d/1VZjzBThRJPTl30biASpWnSrSX23ra1lp/view" target="_blank">
-                        Consistently proportioned rectangular bounding boxes have been found to be a good way of countering this word shape bias</li>
-                    </a></li>
-                </span></span>
-                <input type="checkbox" id="rectBoundingPref">
-            </div>
-            <div>
-                <label for="circleBoundingPref">Circular Bounding Boxes Around Words</label>
-                <span class="tooltip">?<span class="tooltipContent">
-                    <li>When given a longer word or a word with ascenders and descenders such as p's and t's, people tend to think it is bigger than it is</li>
-                    <li>Consistently proportioned rectangular bounding boxes have been found to be a good way of countering this word shape bias; we include a sometimes more aesthetically pleasing alternative, circular bounding boxes, which are based on the bubble chart visualization</li>
-                </span></span>
-                <input type="checkbox" id="circleBoundingPref">
-            </div>
-            <div>
-                <label></label>
-                <button id="generateButton" type="button">Generate!</button>
+            <div id="appearanceGroup" class="prefGroup">
+                <h3>Appearance Settings</h3>
+                <div class="prefGroupContent">
+                    <div>
+                        <label for="fontSizePref">Largest Font Size</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li><a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
+                                Position, size, and color brightness are good ways of encoding ordinal (ordered) data such as word count
+                            </a></li>
+                            <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
+                                The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
+                            </a></li>
+                        </span></span>
+                        <input type="range" min="20" max="80" id="fontSizePref" value="40">
+                        <span id="fontSizeLabel">40</span>
+                    </div>
+                    <div>
+                        <label for="paddingPref">Padding Between Words (pixels)</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li><a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
+                                Layouts with white space tend to be preferred over more tightly packed, less organized looking layouts
+                            </a></li>
+                            <li><a href="https://drive.google.com/file/d/1VoLi7vJyOhetQ9VPU0PK0KoyO8cjaNyw/view" target="_blank">
+                                It is possible that designs which cluster words more closely could cause people to overlook or struggle to read some words, based on experiments dealing with crowding of letters
+                            </a></li>
+                        </span></span>
+                        <input type="range" min="0" max="12" id="paddingPref" value="3">
+                        <span id="paddingLabel">3</span>
+                    </div>
+                    <div>
+                        <label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li><a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
+                                Position, size, and color brightness are good ways of encoding ordinal (ordered) data such as word count
+                            </a></li>
+                            <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
+                                The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
+                            </a></li>
+                            <li><a href="https://drive.google.com/file/d/1VqDPsrmZsgi6_Ka4QtYWkG1rS0Fy5iaJ/view" target="_blank">
+                                Having multiple "channels" that encode the same information reinforces the differences and makes them easier to spot
+                            </a></li>
+                            <li><a href="https://drive.google.com/file/d/1VgMbG5tpxD9vC_2mBQNaFYbga9dH-4gr/view" target="_blank">
+                                In this experiment, font size perception was affected by lightness, but lightness perception didn’t seem to be affected by font size, possibly explained by the fact that dark shapes tend to look bigger
+                            </a></li>
+                        </span></span>
+                        <input type="checkbox" id="lightnessPref" checked>
+                    </div>
+                    <div>
+                        <label for="semanticPref">Number of Semantic Groups</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li><a href="https://dl.acm.org/doi/10.1007/978-3-642-03655-2_43" target="_blank">
+                                Organizing words thematically can mostly eliminate a bias that causes people to pay more attention to the upper-left-hand words
+                            </a></li>
+                            <li><a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
+                                Visually subdividing and semantically organizing words is effective in improving people's accuracy with time-constrained, category understanding tasks
+                            </a></li>
+                            <li><a href="https://medium.com/multiple-views-visualization-research-explained/improving-word-clouds-9d4a04b0722b" target="_blank">
+                                Layouts with white space tend to be preferred over more tightly packed, less organized looking layouts
+                            </a></li>
+                            <li><a href="https://observablehq.com/@mitvis/data-types-graphical-marks-and-visual-encoding-channels" target="_blank">
+                                Position, hue, and shape are good ways to encode nominal (categorical) data such as topic
+                            </a></li>
+                            <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
+                                According to the Gestalt school of psychology, objects that are close together or that are similar are seen as a group 
+                            </a></li>
+                        </span></span>
+                        <input type="range" id="semanticPref" min="1" max="9" value="5">
+                        <span id="semanticLabel">5</span>
+                    </div>
+                    <div id="colorPref"><label for="colorPref">Color</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
+                                The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
+                            </a></li>
+                        </span></span>
+                        <select name="groupColorPref" id="groupColorPref"></select>
+                    </div>
+                    <div id="customColors">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                    </div>
+                    <div>
+                        <label for="rectBoundingPref">Rectangular Bounding Boxes Around Words</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li>When given a longer word or a word with ascenders and descenders such as p's and t's, people tend to think it is bigger than it is</li>
+                            <li><a href="https://drive.google.com/file/d/1VZjzBThRJPTl30biASpWnSrSX23ra1lp/view" target="_blank">
+                                Consistently proportioned rectangular bounding boxes have been found to be a good way of countering this word shape bias</li>
+                            </a></li>
+                        </span></span>
+                        <input type="checkbox" id="rectBoundingPref">
+                    </div>
+                    <div>
+                        <label for="circleBoundingPref">Circular Bounding Boxes Around Words</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li>When given a longer word or a word with ascenders and descenders such as p's and t's, people tend to think it is bigger than it is</li>
+                            <li>Consistently proportioned rectangular bounding boxes have been found to be a good way of countering this word shape bias; we include a sometimes more aesthetically pleasing alternative, circular bounding boxes, which are based on the bubble chart visualization</li>
+                        </span></span>
+                        <input type="checkbox" id="circleBoundingPref">
+                    </div>
+                </div>
             </div>
         </form>
+        <button id="generateButton" type="button">Generate!</button>
         <button id="downloadSvgButton">Download svg</button>
         <div id="extraWords">
             Words that didn't make it into your cloud: 
