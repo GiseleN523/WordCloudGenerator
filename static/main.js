@@ -5,9 +5,9 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
 
   //flex for right column is just set to "auto" with css, so adjust it here to actually fill the rest of the space
-  document.getElementById("rightContentColumn").style.flex = (window.innerWidth-(.93*window.innerHeight)-50)+"px";
-  //this should have been set in the css, but make sure here that it is the same value as the value passed to app and then to d3-cloud
-  document.getElementById("wordCloudPreview").style.height = .93*window.innerHeight;
+  window.onload, window.onresize = () => document.getElementById("rightContentColumn").style.flex = (window.innerWidth-(.93*window.innerHeight)-60)+"px";
+  
+  document.querySelector("body").onload = () => alert("yes")
 
   let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeDark2, d3.schemeSet2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"], ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"]];
   let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4", "Color Scheme 5", "Color Scheme 6", "Color Scheme 7"];
@@ -51,26 +51,13 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     }
   }
 
-  //is this unnecessary? will it actually help at all, or will it just confuse people?
-  document.getElementById("rectBoundingPref").onchange, document.getElementById("circleBoundingPref").onchange = function()
-  {
-    if(document.getElementById("rectBoundingPref").checked || document.getElementById("circleBoundingPref").checked)
-    {
-      document.getElementById("fontSizePref").max = 50;
-      document.getElementById("paddingPref").max = 20;
-    }
-    else
-    {
-      document.getElementById("fontSizePref").max = 80;
-      document.getElementById("paddingPref").max = 10;
-    }
-  }
 
-  document.getElementById("fontSizePref").onchange = (e) => document.getElementById("fontSizeLabel").innerHTML = e.target.value;
+  //oninput
+  document.getElementById("fontSizePref").oninput = (e) => document.getElementById("fontSizeLabel").innerHTML = e.target.value;
 
-  document.getElementById("paddingPref").onchange = (e) => document.getElementById("paddingLabel").innerHTML = e.target.value;
+  document.getElementById("paddingPref").oninput = (e) => document.getElementById("paddingLabel").innerHTML = e.target.value;
 
-  document.getElementById("semanticPref").onchange = (e) => document.getElementById("semanticLabel").innerHTML = e.target.value;
+  document.getElementById("semanticPref").oninput = (e) => document.getElementById("semanticLabel").innerHTML = e.target.value;
 
   document.getElementById("groupColorPref").onchange = () => document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)][i]);
   

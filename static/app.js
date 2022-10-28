@@ -44,7 +44,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
       if(this.circleBoundingPref)
       {
-        this.setCircleSvg(onEndFunction);
+        this.setCoordsWithCircle(onEndFunction);
       }
       else if(this.rectBoundingPref)
       {
@@ -80,15 +80,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
             frequency : d.frequency,
             semGroup : d.semGroup
         }));
-        this.setWithoutBoundingOrRectSvg(fillerWords, onEndFunction);
+        this.setCoordsForRectOrWithoutBounding(fillerWords, onEndFunction);
       }
       else
       {
-        this.setWithoutBoundingOrRectSvg(this.words, onEndFunction);
+        this.setCoordsForRectOrWithoutBounding(this.words, onEndFunction);
       }
   },
   
-  setWithoutBoundingOrRectSvg : function(wordsToUse, onEndFunction) //wordsToUse is a necessary parameter because when there are rectangular bounding boxes, a fillerWords array must be fed to this method instead of this.words
+  setCoordsForRectOrWithoutBounding : function(wordsToUse, onEndFunction) //wordsToUse is a necessary parameter because when there are rectangular bounding boxes, a fillerWords array must be fed to this method instead of this.words
   {
     let wordsSplit = [];
     for(let i=0; i<=d3.max(wordsToUse, d => d.semGroup); i++)
@@ -182,7 +182,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     };
   },
 
-  setCircleSvg : function(onEndFunction)
+  setCoordsWithCircle : function(onEndFunction)
   {
     let wordsBySemGroup = [];
     for(let i=0; i<=d3.max(this.words, d => d.semGroup); i++) //create structure needed for d3 circle packing
