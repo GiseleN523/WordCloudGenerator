@@ -6,6 +6,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
   let defaultStop = "should would could also i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very can will just should now"
 
   return {
+    wordsRaw : [],
+    words : [],
     stopWords : defaultStop.split(" "), 
     extraWords : [], //words that aren't stop words but weren't included in the cloud for various reasons
     dimPref : 700,
@@ -19,8 +21,177 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     colorPref : d3.schemeTableau10,
     rectBoundingPref : false,
     circleBoundingPref : false,
-    createCloud : function(wordsRaw, onEndFunction) //function to call when cloud is done, passed by main
+
+    initialize : function(dimPref)
+    {   
+      this.dimPref = dimPref;
+      
+      this.svg = d3.create("svg")
+        .attr("width", this.dimPref)
+        .attr("height", this.dimPref);
+
+      this.svg.append('rect')
+        .attr('id', 'wordFreqTooltipBackground')
+        .attr('fill', 'white')
+        .attr('stroke', 'black')
+        .attr('rx', '5')
+        .attr('display', 'none');
+  
+      this.svg.append('text')
+        .attr('id', 'wordFreqTooltip')
+        .attr('font-size', '16')
+        .attr('display', 'none');
+        
+      this.svg.selectAll("text")
+        .data(this.words)
+        .join("text")
+        .attr("font-size", d => d.fontSize)
+        .attr("font-family", d => d.font)
+        .attr("text-anchor", "middle") //important for rendering in the way d3-cloud intended
+        .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
+        .attr("x", d => d.x)
+        .attr("y", d => d.y)
+        .attr("cursor", function(d){
+          d.textSvg = this; //save text in word object--not sure where else to do it
+          return "pointer";
+        })
+        .attr("semGroup", d => d.semGroup)
+        .text(d => d.text)
+        .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
+        .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
+    },
+
+    updateWithNumWordsPref(numWordsPref)
     {
+      this.numWordsPref = numWordsPref;
+      this.initializeWords(this.wordsRaw);
+      this.generateCoords();
+    },
+
+    updateWithMinCountPref(minCountPref)
+    {
+      this.minCountPref = minCountPref;
+      this.initializeWords(this.wordsRaw);
+      this.generateCoords();
+    },
+
+    updateWithStopWordsPref(stopWordsPref)
+    {
+      this.stopWordPref = stopWordsPref;
+      this.initializeWords(this.wordsRaw);
+      this.generateCoords();
+    },
+
+    updateWithStopWords(stopWords)
+    {
+      this.stopWords = stopWords;
+      this.initializeWords(this.wordsRaw);
+      this.generateCoords();
+    },
+
+    updateWithFontSizePref(fontSizePref)
+    {
+      this.fontSizePref = fontSizePref;
+      this.setWordSizes();
+      this.generateCoords();
+    },
+
+    updateWithPaddingPref(paddingPref)
+    {
+      this.paddingPref = paddingPref;
+      this.generateCoords();
+    },
+    
+    updateWithColorPref(colorPref)
+    {
+      if(this.colorPref!=colorPref)
+      {
+        this.colorPref = colorPref;
+        setSvgColor();
+      }
+    },
+
+    updateWithLightnessPref(lightnessPref)
+    {
+      this.lightnessPref = lightnessPref;
+      this.setSvgColor();
+    },
+
+    updateWithSemanticPref(semanticPref)
+    {
+      this.semanticPref = semanticPref;
+      this.initializeWords(this.wordsRaw);
+      this.generateCoords();
+    },
+
+    updateWithRectBoundingPref(rectBoundingPref)
+    {
+      if(this.rectBoundingPref!=rectBoundingPref)
+      {
+        this.rectBoundingPref = rectBoundingPref;
+        this.generateCoords();
+      }
+    },
+
+    updateWithCircleBoundingPref(circleBoundingPref)
+    {
+      if(this.circleBoundingPref!=circleBoundingPref)
+      {
+        this.circleBoundingPref = circleBoundingPref;
+        this.generateCoords();
+      }
+    },
+
+    showWordFreqTooltip : function(word)
+    {
+      d3.select('#wordFreqTooltip')
+        .text(word.text+": "+word.frequency+" instances")
+        .attr('x', word.x)
+        .attr('y', word.y+25)
+        .attr("text-anchor", "middle")
+        .attr('display', 'block');
+      d3.select(word.textSvg).attr('font-weight', 'bold');
+      if(word.shapeSvg!=undefined)
+      {
+        d3.select(word.shapeSvg).attr('stroke-width', '3');
+      }
+      let context = document.createElement("canvas").getContext("2d");
+      context.font = document.getElementById("wordFreqTooltip").getAttribute("font-size")+"px sans-serif";
+      let width = context.measureText(document.getElementById("wordFreqTooltip").innerHTML).width;
+      let height = document.getElementById("wordFreqTooltip").getAttribute("font-size");
+      d3.select("#wordFreqTooltipBackground")
+        .attr('height', parseInt(height)+6)
+        .attr('width', width+6)
+        .attr('x', (word.x-width/2)-3)
+        .attr('y', (word.y+height/2)+2)
+        .attr('display', 'block');
+    },
+
+    hideWordFreqTooltip : function(word)
+    {
+      d3.select('#wordFreqTooltip').attr('display', 'none');
+      d3.select("#wordFreqTooltipBackground").attr('display', 'none');
+      d3.select(word.textSvg).attr('font-weight', 'normal');
+      if(word.shapeSvg!=undefined)
+      {
+        d3.select(word.shapeSvg).attr('stroke-width', '1');
+      }
+    },
+
+    setWordSizes : function()
+    {
+      let sizeScale = d3.scaleSqrt()
+        .domain([0, d3.max(this.words, d => d.frequency)])
+        .range([0, this.fontSizePref])
+
+      this.words.forEach(function(d){
+        d.fontSize = sizeScale(d.frequency);
+      });
+    },
+
+    initializeWords : function(wordsRaw)
+    {
+      this.wordsRaw = wordsRaw;
       wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
       this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
       while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
@@ -29,22 +200,14 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       }
 
       this.words.forEach(d => d.semGroup++); //since we still have group -1, increase all semantic group numbers by 1 to make them >=0
-      
-      let sizeScale = d3.scaleSqrt()
-        .domain([0, d3.max(this.words, d => d.frequency)])
-        .range([0, this.fontSizePref])
+      this.setWordSizes();
+    },
 
-      this.words.forEach(function(d){
-        d.fontSize = sizeScale(d.frequency);
-      });
-
-      this.svg = d3.create("svg")
-        .attr("width", this.dimPref)
-        .attr("height", this.dimPref);
-
+    generateCoords : function() //function to call when cloud is done, passed by main
+    {
       if(this.circleBoundingPref)
       {
-        this.setCoordsWithCircle(onEndFunction);
+        this.generateCoordsWithCircle(null);
       }
       else if(this.rectBoundingPref)
       {
@@ -80,15 +243,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
             frequency : d.frequency,
             semGroup : d.semGroup
         }));
-        this.setCoordsForRectOrWithoutBounding(fillerWords, onEndFunction);
+        this.generateCoordsForRectOrWithoutBounding(fillerWords, null);
       }
       else
       {
-        this.setCoordsForRectOrWithoutBounding(this.words, onEndFunction);
+        this.generateCoordsForRectOrWithoutBounding(this.words, null);
       }
   },
   
-  setCoordsForRectOrWithoutBounding : function(wordsToUse, onEndFunction) //wordsToUse is a necessary parameter because when there are rectangular bounding boxes, a fillerWords array must be fed to this method instead of this.words
+  generateCoordsForRectOrWithoutBounding : function(wordsToUse, onEndFunction) //wordsToUse is a necessary parameter because when there are rectangular bounding boxes, a fillerWords array must be fed to this method instead of this.words
   {
     let wordsSplit = [];
     for(let i=0; i<=d3.max(wordsToUse, d => d.semGroup); i++)
@@ -182,7 +345,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     };
   },
 
-  setCoordsWithCircle : function(onEndFunction)
+  generateCoordsWithCircle : function(onEndFunction)
   {
     let wordsBySemGroup = [];
     for(let i=0; i<=d3.max(this.words, d => d.semGroup); i++) //create structure needed for d3 circle packing
@@ -208,9 +371,12 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     this.createSvg(onEndFunction);
   },
 
-  createSvg : function(onEndFunction)
+  setSvgColor : function()
   {
-    this.colorPref.unshift("#444444"); //add gray to colors list for "-1" ungrouped group
+    if(this.colorPref[0]!="#444444")
+    {
+      this.colorPref.unshift("#444444"); //add gray to colors list for "-1" ungrouped group
+    }
     
     let hslColors = this.colorPref.map(d => d3.hsl(d)); //convert color list to hsl so we can manipulate lightness value
 
@@ -218,6 +384,21 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .domain([0, d3.max(this.words, d => d.frequency)])
         .range([.8, .4]);
 
+    if(this.rectBoundingPref || this.circleBoundingPref)
+    {
+      this.svg.selectAll("circle", "rectangle")
+        .attr("stroke", "black")
+        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
+    }
+    else
+    {
+      this.svg.selectAll("text")
+        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
+    }
+  },
+
+  createSvg : function(onEndFunction)
+  {
     if(this.circleBoundingPref)
     {
       this.svg.selectAll("circle")
@@ -226,8 +407,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .attr("cx", d => d.x)
         .attr("cy", d => d.y)
         .attr("r", d => d.r)
-        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
-        .attr("stroke", "black")
         .attr("cursor", function(d){
           d.shapeSvg = this; //save circle in word object--not sure where else to do it
           return "pointer";
@@ -245,8 +424,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .attr("y", d => d.y0+d.y)
         .attr("width", d => d.width)
         .attr("height", d => d.height)
-        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
-        .attr("stroke", "black")
         .attr("cursor", function(d){
           d.shapeSvg = this; //save rectangle in word object--not sure where else to do it
           return "pointer";
@@ -268,7 +445,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       .attr("font-family", d => d.font)
       .attr("text-anchor", "middle") //important for rendering in the way d3-cloud intended
       .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
-      .attr("fill", (this.circleBoundingPref || this.rectBoundingPref) ? "black" : (d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup]))
       .attr("x", d => d.x)
       .attr("y", d => d.y)
       .attr("cursor", function(d){
@@ -277,62 +453,17 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       })
       .attr("semGroup", d => d.semGroup)
       .text(d => d.text)
-      .on('mouseover', (event, d) => showWordFreqTooltip(d))
-      .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+      .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
+      .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
 
     //I'm really confused by this line and I don't remember where I was getting some of this from; should it be separated out into more lines?
     let extraWordsTemp = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>this.dimPref/2 || d['__data__'].x<0-this.dimPref/2 || d['__data__'].y>this.dimPref/2 || d['__data__'].y<0-this.dimPref/2)).map(d => d['__data__']);
     //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
     this.extraWords = extraWordsTemp.concat(wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
 
-    this.svg.append('rect')
-      .attr('id', 'wordFreqTooltipBackground')
-      .attr('fill', 'white')
-      .attr('stroke', 'black')
-      .attr('rx', '5')
-      .attr('display', 'none');
+    this.setSvgColor();
 
-    this.svg.append('text')
-      .attr('id', 'wordFreqTooltip')
-      .attr('font-size', '16')
-      .attr('display', 'none');
-
-    function showWordFreqTooltip(word)
-    {
-      d3.select('#wordFreqTooltip')
-        .text(word.text+": "+word.frequency+" instances")
-        .attr('x', word.x)
-        .attr('y', word.y+25)
-        .attr("text-anchor", "middle")
-        .attr('display', 'block');
-      d3.select(word.textSvg).attr('font-weight', 'bold');
-      if(word.shapeSvg!=undefined)
-      {
-        d3.select(word.shapeSvg).attr('stroke-width', '3');
-      }
-      let context = document.createElement("canvas").getContext("2d");
-      context.font = document.getElementById("wordFreqTooltip").getAttribute("font-size")+"px sans-serif";
-      let width = context.measureText(document.getElementById("wordFreqTooltip").innerHTML).width;
-      let height = document.getElementById("wordFreqTooltip").getAttribute("font-size");
-      d3.select("#wordFreqTooltipBackground")
-        .attr('height', parseInt(height)+6)
-        .attr('width', width+6)
-        .attr('x', (word.x-width/2)-3)
-        .attr('y', (word.y+height/2)+2)
-        .attr('display', 'block');
-    }
-
-    function hideWordFreqTooltip(word)
-    {
-      d3.select('#wordFreqTooltip').attr('display', 'none');
-      d3.select("#wordFreqTooltipBackground").attr('display', 'none');
-      d3.select(word.textSvg).attr('font-weight', 'normal');
-      if(word.shapeSvg!=undefined)
-      {
-        d3.select(word.shapeSvg).attr('stroke-width', '1');
-      }
-    }
-    onEndFunction(); //finally call function that was passed by main at the beginning of createCloud() to perform at end of cloud generation
+    //onEndFunction(); //finally call function that was passed by main at the beginning of createCloud() to perform at end of cloud generation
   }
 };
 });

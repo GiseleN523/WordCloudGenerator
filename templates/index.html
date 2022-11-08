@@ -13,8 +13,8 @@
         <div id="textInputGroup" class="prefGroup">
             <h3>Text Source</h3>
             <div class="prefGroupContent">
-                <input id="fileInput" type="file" accept=".txt">
-                <span id="wordCount"></span><br>
+                <input type="radio"><input id="fileInput" type="file" accept=".txt"><br>
+                <input type="radio"><span id="wordCount"></span><br>
                 <textarea id="rawTextInput" rows="10" placeholder="Or paste your text here"></textarea>
             </div>
         </div>
@@ -80,6 +80,25 @@
                         <input type="range" min="0" max="12" id="paddingPref" value="3">
                         <span id="paddingLabel">3</span>
                     </div>
+                    <div id="colorPref"><label for="colorPref">Color</label>
+                        <span class="tooltip">?<span class="tooltipContent">
+                            <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
+                                The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
+                            </a></li>
+                        </span></span>
+                        <select name="groupColorPref" id="groupColorPref"></select>
+                    </div>
+                    <div id="customColors">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                        <input type="color">
+                    </div>
                     <div>
                         <label for="lightnessPref">Use Lightness To Encode Word Count (in addition to font size)</label>
                         <span class="tooltip">?<span class="tooltipContent">
@@ -120,25 +139,6 @@
                         <input type="range" id="semanticPref" min="1" max="9" value="5">
                         <span id="semanticLabel">5</span>
                     </div>
-                    <div id="colorPref"><label for="colorPref">Color</label>
-                        <span class="tooltip">?<span class="tooltipContent">
-                            <li><a href="https://drive.google.com/file/d/1W-t0TtkChOX3sOcD2foJ-d0OSMRYR5qn/view" target="_blank">
-                                The brain can preattentively detect (instantly sort differences and similarities in) size, orientation, and color or shade
-                            </a></li>
-                        </span></span>
-                        <select name="groupColorPref" id="groupColorPref"></select>
-                    </div>
-                    <div id="customColors">
-                        <input type="color">
-                        <input type="color">
-                        <input type="color">
-                        <input type="color">
-                        <input type="color">
-                        <input type="color">
-                        <input type="color">
-                        <input type="color">
-                        <input type="color">
-                    </div>
                     <div>
                         <label for="rectBoundingPref">Rectangular Bounding Boxes Around Words</label>
                         <span class="tooltip">?<span class="tooltipContent">
@@ -160,7 +160,6 @@
                 </div>
             </div>
         </form>
-        <button id="generateButton" type="button">Generate!</button>
         <button id="downloadSvgButton">Download svg</button>
         <div id="extraWords">
             Words that didn't make it into your cloud: 
