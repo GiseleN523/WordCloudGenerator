@@ -441,8 +441,11 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     {
       this.svg.selectAll(".cloudshape").remove();
     }
-    
-    const t = this.svg.transition().duration(1250);
+
+    const t = this.svg.transition()
+      .duration(1250)
+      //.onend(() => this.setSvgColor());
+
     this.svg.selectAll(".cloudtext")
       .data(this.words, d => d.text)
       .join(

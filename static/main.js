@@ -4,14 +4,6 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
 
   let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
 
-  //flex for right column is just set to "auto" with css, so adjust it here to actually fill the rest of the space
-  function resizeRightContentToFit()
-  {
-    document.getElementById("rightContentColumn").style.flex = (window.innerWidth-(.93*window.innerHeight)-60)+"px";
-  }
-  window.onresize = resizeRightContentToFit;
-  resizeRightContentToFit();
-
   let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeDark2, d3.schemeSet2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"]];
   let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4", "Color Scheme 5", "Color Scheme 6"];
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
