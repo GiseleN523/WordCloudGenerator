@@ -8,7 +8,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
   return {
     wordsRaw : [],
     words : [],
-    stopWords : defaultStop.split(" "), 
+    stopWords : defaultStop.split(" "),
+    wordsParsed : [],
     extraWords : [], //words that aren't stop words but weren't included in the cloud for various reasons
     dimPref : 700,
     paddingPref : 3,
@@ -25,81 +26,84 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     initialize : function(dimPref)
     {   
       this.dimPref = dimPref;
-      
+
       this.svg = d3.create("svg")
         .attr("width", this.dimPref)
         .attr("height", this.dimPref);
-
-      this.svg.append('rect')
-        .attr('id', 'wordFreqTooltipBackground')
-        .attr('fill', 'white')
-        .attr('stroke', 'black')
-        .attr('rx', '5')
-        .attr('display', 'none');
-  
-      this.svg.append('text')
-        .attr('id', 'wordFreqTooltip')
-        .attr('font-size', '16')
-        .attr('display', 'none');
         
       this.svg.selectAll("text")
         .data(this.words)
         .join("text")
-        .attr("font-size", d => d.fontSize)
-        .attr("font-family", d => d.font)
-        .attr("text-anchor", "middle") //important for rendering in the way d3-cloud intended
-        .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
-        .attr("x", d => d.x)
-        .attr("y", d => d.y)
-        .attr("cursor", function(d){
-          d.textSvg = this; //save text in word object--not sure where else to do it
-          return "pointer";
-        })
-        .attr("semGroup", d => d.semGroup)
-        .text(d => d.text)
-        .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
-        .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
+        .attr("class", "cloudtext");
     },
 
-    updateWithNumWordsPref(numWordsPref)
+    updateWithNumWordsPref(numWordsPref, onEndFunction)
     {
       this.numWordsPref = numWordsPref;
+      let oldWords = this.words;
       this.initializeWords(this.wordsRaw);
-      this.generateCoords();
+      if(oldWords != this.words) //only regenerate cloud if it contains different words now
+      {
+        this.generateCoords(onEndFunction);
+      }
     },
 
-    updateWithMinCountPref(minCountPref)
+    updateWithMinCountPref(minCountPref, onEndFunction)
     {
       this.minCountPref = minCountPref;
+      let oldWords = this.words;
       this.initializeWords(this.wordsRaw);
-      this.generateCoords();
+      if(oldWords != this.words) //only regenerate cloud if it contains different words now
+      {
+        this.generateCoords(onEndFunction);
+      }
     },
 
-    updateWithStopWordsPref(stopWordsPref)
+    updateWithStopWordsPref(stopWordsPref, onEndFunction)
     {
       this.stopWordPref = stopWordsPref;
+      let oldWords = this.words;
       this.initializeWords(this.wordsRaw);
-      this.generateCoords();
+      if(oldWords != this.words) //only regenerate cloud if it contains different words now
+      {
+        this.generateCoords(onEndFunction);
+      }
     },
 
-    updateWithStopWords(stopWords)
+    updateWithStopWords(stopWords, onEndFunction)
     {
       this.stopWords = stopWords;
+      let oldWords = this.words;
       this.initializeWords(this.wordsRaw);
-      this.generateCoords();
+      if(oldWords != this.words) //only regenerate cloud if it contains different words now
+      {
+        this.generateCoords(onEndFunction);
+      }
     },
 
-    updateWithFontSizePref(fontSizePref)
+    updateWithFontSizePref(fontSizePref, onEndFunction)
+    {
+      if(this.fontSizePref != fontSizePref)
+      {
+        this.fontSizePref = fontSizePref;
+        this.setWordSizes();
+      }
+      this.generateCoords(onEndFunction);
+    },
+
+    changeFontSizeNoPositionUpdate(fontSizePref)
     {
       this.fontSizePref = fontSizePref;
       this.setWordSizes();
-      this.generateCoords();
+      this.svg.selectAll(".cloudtext")
+        .data(this.words)
+        .attr("font-size", d => d.fontSize)
     },
 
-    updateWithPaddingPref(paddingPref)
+    updateWithPaddingPref(paddingPref, onEndFunction)
     {
       this.paddingPref = paddingPref;
-      this.generateCoords();
+      this.generateCoords(onEndFunction);
     },
     
     updateWithColorPref(colorPref)
@@ -117,28 +121,28 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       this.setSvgColor();
     },
 
-    updateWithSemanticPref(semanticPref)
+    updateWithSemanticPref(semanticPref, onEndFunction)
     {
       this.semanticPref = semanticPref;
       this.initializeWords(this.wordsRaw);
-      this.generateCoords();
+      this.generateCoords(onEndFunction);
     },
 
-    updateWithRectBoundingPref(rectBoundingPref)
+    updateWithRectBoundingPref(rectBoundingPref, onEndFunction)
     {
       if(this.rectBoundingPref!=rectBoundingPref)
       {
         this.rectBoundingPref = rectBoundingPref;
-        this.generateCoords();
+        this.generateCoords(onEndFunction);
       }
     },
 
-    updateWithCircleBoundingPref(circleBoundingPref)
+    updateWithCircleBoundingPref(circleBoundingPref, onEndFunction)
     {
       if(this.circleBoundingPref!=circleBoundingPref)
       {
         this.circleBoundingPref = circleBoundingPref;
-        this.generateCoords();
+        this.generateCoords(onEndFunction);
       }
     },
 
@@ -192,9 +196,9 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     initializeWords : function(wordsRaw)
     {
       this.wordsRaw = wordsRaw;
-      wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
-      this.words = wordsParsed.slice(0, Math.min(wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
-      while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<wordsParsed.length && this.words[this.words.length-1].frequency === wordsParsed[this.words.length].frequency)))
+      this.wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
+      this.words = this.wordsParsed.slice(0, Math.min(this.wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
+      while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<this.wordsParsed.length && this.words[this.words.length-1].frequency === this.wordsParsed[this.words.length].frequency)))
       { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
         this.words.pop();
       }
@@ -203,11 +207,11 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       this.setWordSizes();
     },
 
-    generateCoords : function() //function to call when cloud is done, passed by main
+    generateCoords : function(onEndFunction) //function to call when cloud is done, passed by main
     {
       if(this.circleBoundingPref)
       {
-        this.generateCoordsWithCircle(null);
+        this.generateCoordsWithCircle(onEndFunction);
       }
       else if(this.rectBoundingPref)
       {
@@ -243,11 +247,11 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
             frequency : d.frequency,
             semGroup : d.semGroup
         }));
-        this.generateCoordsForRectOrWithoutBounding(fillerWords, null);
+        this.generateCoordsForRectOrWithoutBounding(fillerWords, onEndFunction);
       }
       else
       {
-        this.generateCoordsForRectOrWithoutBounding(this.words, null);
+        this.generateCoordsForRectOrWithoutBounding(this.words, onEndFunction);
       }
   },
   
@@ -272,8 +276,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .random(() => .5) //important; always start each word's spiral in center so that largest words are in center
         .on("end", function()
         {
-          let date = new Date();
-          let time = date.getTime();
           if(i===wordsSplit.length-1) //when cloud generation is finished and all semantic groups have been placed:
           {
             let tempSvg = d3.create("svg") //temporary svg we will use to run force simulation on without interfering with real svg that is visible
@@ -310,8 +312,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
               })
               .on("end", function() //when the simulation is finished and groups have been placed:
               {
-                let date1 = new Date();
-                console.log(date1.getTime()-date.getTime())
                 for(let i=0; i<wordsSplit.length; i++)
                 {
                   for(let j=0; j<wordsSplit[i].length; j++)
@@ -337,7 +337,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
                     }
                   }
                 }
-                app.createSvg(onEndFunction);
+                app.updateSvg(onEndFunction);
               });
           }
         });
@@ -368,15 +368,12 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       d.data.y = d.y;
       d.data.r = d.r;
     });
-    this.createSvg(onEndFunction);
+    this.updateSvg(onEndFunction);
   },
 
   setSvgColor : function()
   {
-    if(this.colorPref[0]!="#444444")
-    {
-      this.colorPref.unshift("#444444"); //add gray to colors list for "-1" ungrouped group
-    }
+    this.colorPref[0] == "#444444" ? null : this.colorPref.unshift("#444444"); //add gray to colors list for "-1" ungrouped group
     
     let hslColors = this.colorPref.map(d => d3.hsl(d)); //convert color list to hsl so we can manipulate lightness value
 
@@ -386,24 +383,27 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     if(this.rectBoundingPref || this.circleBoundingPref)
     {
-      this.svg.selectAll("circle", "rectangle")
+      this.svg.selectAll(".cloudshape")
         .attr("stroke", "black")
         .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
+      this.svg.selectAll(".cloudtext")
+        .attr("fill", "black")
     }
     else
     {
-      this.svg.selectAll("text")
+      this.svg.selectAll(".cloudtext")
         .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
     }
   },
 
-  createSvg : function(onEndFunction)
+  updateSvg : function(onEndFunction)
   {
     if(this.circleBoundingPref)
     {
-      this.svg.selectAll("circle")
+      this.svg.selectAll(".cloudshape")
         .data(this.words)
         .join("circle")
+        .attr("class", "cloudshape")
         .attr("cx", d => d.x)
         .attr("cy", d => d.y)
         .attr("r", d => d.r)
@@ -411,15 +411,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           d.shapeSvg = this; //save circle in word object--not sure where else to do it
           return "pointer";
         })
-        .on('mouseover', (event, d) => showWordFreqTooltip(d)) //is there a better way to get the source?
-        .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+        .on('mouseover', (event, d) => this.showWordFreqTooltip(d)) //is there a better way to get the source?
+        .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
     }
-
-    if(this.rectBoundingPref)
+    else if(this.rectBoundingPref)
     {
-      this.svg.selectAll("rect")
+      this.svg.selectAll(".cloudshape")
         .data(this.words)
         .join("rect")
+        .attr("class", "cloudshape")
         .attr("x", d => d.x0+d.x)
         .attr("y", d => d.y0+d.y)
         .attr("width", d => d.width)
@@ -428,8 +428,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           d.shapeSvg = this; //save rectangle in word object--not sure where else to do it
           return "pointer";
         })
-        .on('mouseover', (event, d) => showWordFreqTooltip(d)) 
-        .on('mouseout', (event, d) => hideWordFreqTooltip(d));
+        .on('mouseover', (event, d) => this.showWordFreqTooltip(d)) 
+        .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
       this.words.forEach(function(d)
       {
         let context = document.createElement("canvas").getContext("2d");
@@ -437,33 +437,73 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         d.y -= context.measureText(d.text).actualBoundingBoxDescent/2;
       })
     }
+    else
+    {
+      this.svg.selectAll(".cloudshape").remove();
+    }
+    
+    const t = this.svg.transition().duration(1250);
+    this.svg.selectAll(".cloudtext")
+      .data(this.words, d => d.text)
+      .join(
+        enter => enter.append('text')
+          .attr("class", "cloudtext")
+          .attr("font-size", 0)
+          .attr("font-family", d => d.font)
+          .attr("text-anchor", "middle") //important for rendering in the way d3-cloud intended
+          .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
+          .attr("x", this.dimPref/2)
+          .attr("y", this.dimPref/2)
+          .attr("cursor", function(d){
+            d.textSvg = this; //save text in word object--not sure where else to do it
+            return "pointer";
+          })
+          .attr("semGroup", d => d.semGroup)
+          .text(d => d.text)
+          .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
+          .on('mouseout', (event, d) => this.hideWordFreqTooltip(d))
+          .call(enter => enter.transition(t)
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("font-size", d => d.fontSize)
+          ),
+        update => update
+          .attr("semGroup", d => d.semGroup)
+          .call(update => update.transition(t)
+            .attr("font-size", d => d.fontSize)
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+          ),
+        exit => exit
+          .call(exit => exit.transition(t)
+            .attr("font-size", 0)
+            .remove()
+          )
+      )
 
-    this.svg.selectAll("text")
-      .data(this.words)
-      .join("text")
-      .attr("font-size", d => d.fontSize)
-      .attr("font-family", d => d.font)
-      .attr("text-anchor", "middle") //important for rendering in the way d3-cloud intended
-      .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
-      .attr("x", d => d.x)
-      .attr("y", d => d.y)
-      .attr("cursor", function(d){
-        d.textSvg = this; //save text in word object--not sure where else to do it
-        return "pointer";
-      })
-      .attr("semGroup", d => d.semGroup)
-      .text(d => d.text)
-      .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
-      .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
+    this.svg.append('rect')
+      .attr('id', 'wordFreqTooltipBackground')
+      .attr('fill', 'white')
+      .attr('stroke', 'black')
+      .attr('rx', '5')
+      .attr('display', 'none');
+
+    this.svg.append('text')
+      .attr('id', 'wordFreqTooltip')
+      .attr('font-size', '16')
+      .attr('display', 'none');
 
     //I'm really confused by this line and I don't remember where I was getting some of this from; should it be separated out into more lines?
     let extraWordsTemp = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>this.dimPref/2 || d['__data__'].x<0-this.dimPref/2 || d['__data__'].y>this.dimPref/2 || d['__data__'].y<0-this.dimPref/2)).map(d => d['__data__']);
     //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
-    this.extraWords = extraWordsTemp.concat(wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
+    this.extraWords = extraWordsTemp.concat(this.wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
 
     this.setSvgColor();
 
-    //onEndFunction(); //finally call function that was passed by main at the beginning of createCloud() to perform at end of cloud generation
+    if(onEndFunction != undefined)
+    {
+      onEndFunction(); //finally call function that was passed by main at the beginning of createCloud() to perform at end of cloud generation
+    }
   }
 };
 });

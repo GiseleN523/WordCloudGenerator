@@ -12,8 +12,8 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   window.onresize = resizeRightContentToFit;
   resizeRightContentToFit();
 
-  let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeDark2, d3.schemeSet2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"], ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"]];
-  let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4", "Color Scheme 5", "Color Scheme 6", "Color Scheme 7"];
+  let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeDark2, d3.schemeSet2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"]];
+  let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4", "Color Scheme 5", "Color Scheme 6"];
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
   document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
 
@@ -21,18 +21,21 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
 
   document.getElementById("wordCloudPreview").append(app.svg.node());
 
-  document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " "); //populate stop words textarea with app's default stopwords
+  //populate stop words textarea with app's default stopwords
+  document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
   
-  /*document.getElementById('generateButton').onclick = function()
-  {
-    document.getElementById("showAllWords").checked = false;
-    document.getElementById("wordCloudPreview").innerHTML = ""; //clear previous word cloud
-  }*/
+  document.getElementById("downloadSvgButton").onclick = () => svgExportJS.downloadSvg(app.svg.node(), "yourwordcloud");
 
-  //update fileUploadLast variable with whether a file was just uploaded, in order to know where to get the text from
-  function createFromScratch(e)
+  //when new text has been added and the whole cloud creation process needs to happen
+  function createFromScratch(fileUpload)
   {
-    e.target.value.length>0 ? fileUploadLast = true : fileUploadLast = false;
+    fileUploadLast = fileUpload;
+
+    let fileInput = document.getElementById("fileInput");
+    let textInput = document.getElementById("rawTextInput");
+
+    fileUploadLast ? document.getElementById("fileInputRadio").checked = true : document.getElementById("rawTextInputRadio").checked = true;
+
     document.getElementById("showAllWords").checked = false;
     app.paddingPref = document.getElementById('paddingPref').value;
     app.numWordsPref = document.getElementById('numWordsPref').value;
@@ -44,12 +47,6 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
-  
-    let fileInput = document.getElementById("fileInput");
-    let textInput = document.getElementById("rawTextInput");
-
-    //document.getElementById("wordCloudPreview").innerHTML = ""; //clear previous word cloud
-
     
     if(fileUploadLast && fileInput.files.length>0) //create cloud from file input
     {
@@ -58,23 +55,43 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
       reader.onload = function()
       {
         app.initializeWords(reader.result);
-        app.generateCoords();
-        //displayCloud(app.svg.node());
+        document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
+        app.generateCoords(createExtraWordsList);
       };
     }
     else if(!fileUploadLast && textInput.value.length>0) //create file from textarea input box
     {
       app.initializeWords(textInput.value);
-      app.generateCoords();
-      //displayCloud(app.svg.node())
+      document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
+      app.generateCoords(createExtraWordsList);
+    }
+    else
+    {
+      document.getElementById("wordCount").innerHTML = "";
+      document.getElementById("wordCloudPreview").innerHTML = ""; //clear previous word cloud
     }
   }
-  document.getElementById("fileInput").onchange = createFromScratch;
-  document.getElementById("rawTextInput").onchange = createFromScratch;
 
-  document.getElementById("numWordsPref").onchange = () => app.updateWithNumWordsPref(document.getElementById('numWordsPref').value);
+  document.getElementById("fileInput").onchange = () => createFromScratch(true);
+  document.getElementById("rawTextInput").onchange = () => createFromScratch(false);
+  document.getElementById("fileInputRadio").onchange = (e) => e.target.checked ? createFromScratch(true) : createFromScratch(false);
+  document.getElementById("rawTextInputRadio").onchange = (e) => e.target.checked ? createFromScratch(false) : createFromScratch(true);
 
-  document.getElementById("minCountPref").onchange = () => app.updateWithMinCountPref(document.getElementById('minCountPref').value);
+  document.getElementById("numWordsPref").onchange = function()
+  {
+    if(document.getElementById('numWordsPref').value != app.numWordsPref)
+    {
+      app.updateWithNumWordsPref(document.getElementById('numWordsPref').value, createExtraWordsList);
+    }
+  }
+
+  document.getElementById("minCountPref").onchange = function()
+  {
+    if(document.getElementById('minCountPref').value != app.minCountPref)
+    {
+      app.updateWithMinCountPref(document.getElementById('minCountPref').value, createExtraWordsList);
+    }
+  }
 
   document.getElementById("stopWordsPref").onchange = function(e)
   {
@@ -88,30 +105,27 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
       document.getElementById("stopWordsBoxPrefDiv").style.display = "none";
       app.updateWithStopWordsPref(false);
     }
-    //TODO only if new words that weren't previously in stopwords:
-    //displayCloud(app.svg.node())
   }
 
   document.getElementById("stopWordsBoxPref").onchange = function()
   {
     app.updateWithStopWords(document.getElementById("stopWordsBoxPref").value.split(" "));
-    //TODO only if new words that weren't previously in stopwords:
-    //displayCloud(app.svg.node())
   }
 
-  document.getElementById("fontSizePref").onchange = function(e)
+  document.getElementById("fontSizePref").oninput = function(e)
   {
     document.getElementById("fontSizeLabel").innerHTML = e.target.value;
-    app.updateWithFontSizePref(parseInt(e.target.value));
-    //displayCloud(app.svg.node())
+    if(app.fontSizePref != e.target.value)
+    {
+      app.changeFontSizeNoPositionUpdate(e.target.value);
+    }
   }
 
-  document.getElementById("paddingPref").onchange = function(e)
-  {
-    document.getElementById("paddingLabel").innerHTML = e.target.value;
-    app.updateWithPaddingPref(parseInt(e.target.value));
-    //displayCloud(app.svg.node())
-  }
+  document.getElementById("fontSizePref").onchange = (e) => app.updateWithFontSizePref(parseInt(e.target.value));
+
+  document.getElementById("paddingPref").oninput = (e) => document.getElementById("paddingLabel").innerHTML = e.target.value;
+
+  document.getElementById("paddingPref").onchange = (e) => (app.paddingPref != e.target.value) ? app.updateWithPaddingPref(parseInt(e.target.value)) : null;
 
   document.getElementById("groupColorPref").oninput = function()
   {
@@ -122,18 +136,15 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
 
   document.querySelectorAll("#customColors input").forEach((d) => d.oninput = function()
   {
-    //document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
     app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
     app.setSvgColor();
   });
 
   document.getElementById("lightnessPref").oninput = () => app.updateWithLightnessPref(document.getElementById('lightnessPref').checked);
 
-  document.getElementById("semanticPref").oninput = function(e)
-  {
-    document.getElementById("semanticLabel").innerHTML = e.target.value;
-    app.updateWithSemanticPref(e.target.value);
-  }
+  document.getElementById("semanticPref").oninput = (e) => document.getElementById("semanticLabel").innerHTML = e.target.value;
+
+  document.getElementById("semanticPref").onchange = (e) => (e.target.value != app.semanticPref) ? app.updateWithSemanticPref(e.target.value) : null;
 
   document.getElementById("rectBoundingPref").onchange = function()
   {
@@ -193,14 +204,8 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     }
   }
 
-  function displayCloud()
-  {    
-
-    document.getElementById("downloadSvgButton").style.display = "inline-block";
-    document.getElementById("downloadSvgButton").onclick = () => svgExportJS.downloadSvg(app.svg.node(), "yourwordcloud");
-
-    document.getElementById("wordCount").innerHTML = " | Number of Unique Words (excluding stop words): "+(app.words.length+app.extraWords.length);
-
+  function createExtraWordsList()
+  {
     document.getElementById("extraWords").style.display = "block";
     document.getElementById("extraWordsList").innerHTML = "";
     appendToExtraWordsList(100);

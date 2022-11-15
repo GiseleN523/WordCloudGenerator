@@ -3,6 +3,7 @@ body
     font-family: sans-serif;
     display: flex;
     width: 100%;
+    overflow-x: hidden;
 }
 
 .prefGroupContent div label
@@ -76,9 +77,15 @@ button:hover
     width: 4em;
 }
 
+.prefGroupContent input[type="radio"]
+{
+    vertical-align: middle;
+    line-height: 100%;
+}
+
 #leftContentColumn
 {
-    flex: 93vh;
+    flex: 96vh;
 }
 
 #rightContentColumn
@@ -88,7 +95,7 @@ button:hover
 
 #wordCloudPreview
 {
-    height: 93vh;
+    height: 96vh;
     min-width: 50px;
     max-height: 1000px;
     min-height: 400px;
@@ -100,7 +107,8 @@ button:hover
 
 #rawTextInput
 {
-    width: 100%;
+    width: 95%;
+    display: inline;
 }
 
 #fileInput, #rawTextInput
@@ -164,9 +172,4 @@ button:hover
 .tooltipContent a:hover
 {
     color: #666666;
-}
-
-#downloadSvgButton
-{
-    display: none;
 }
