@@ -51,17 +51,18 @@ header
     padding-bottom: .2em;
 }
 
-button
+button, #fileInput
 {
     background-color: white;
     color: black;
     padding: .5em;
+    border: 1px solid black;
     border-radius: 6px;
     font-size: 110%;
     cursor: pointer;
 }
 
-button:hover
+button:hover, #fileInput:hover
 {
     background-color: #dddddd;
     border-radius: 6px;
@@ -77,14 +78,9 @@ button:hover
     width: 4em;
 }
 
-#textInputGroup .prefGroupContent > *
-{
-    display: inline;
-}
-
 #rawTextInputRadio
 {
-    vertical-align: center;
+    vertical-align: middle;
 }
 
 #leftContentColumn
@@ -95,7 +91,7 @@ button:hover
 #rightContentColumn
 {
     flex-grow: 1;
-    padding-left: 2em;
+    padding-left: 1.5em;
 }
 
 #wordCloudPreview
@@ -115,6 +111,17 @@ button:hover
 {
     width: 95%;
     display: inline;
+}
+
+#fileInput
+{
+    font-size: 90%;
+}
+
+#fileInput input
+{
+    position: absolute;
+    top: -1000px;
 }
 
 #fileInput, #rawTextInput

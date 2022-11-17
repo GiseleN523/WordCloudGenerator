@@ -13,8 +13,9 @@
         <div id="textInputGroup" class="prefGroup">
             <h3>Text Source</h3>
             <div class="prefGroupContent">
-                <input type="radio" id="fileInputRadio" name="textInputRadio"><input id="fileInput" type="file" accept=".txt"><br><br>
-                <input type="radio" id="rawTextInputRadio" name="textInputRadio"><textarea id="rawTextInput" rows="10" placeholder="Or paste your text here"></textarea>
+                <br><label id="fileInput"><input type="file" accept=".txt"><span>Select A File</span></label>
+                <span id="currentFile"></span>
+                <textarea id="rawTextInput" rows="10" placeholder="Or paste your text here"></textarea>
                 <br><br><span id="wordCount"></span>
             </div>
         </div>

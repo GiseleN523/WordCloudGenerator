@@ -111,13 +111,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       if(this.colorPref!=colorPref)
       {
         this.colorPref = colorPref;
-        setSvgColor();
+        this.assignWordColors()
+        this.setSvgColor();
       }
     },
 
     updateWithLightnessPref(lightnessPref)
     {
       this.lightnessPref = lightnessPref;
+      this.assignWordColors();
       this.setSvgColor();
     },
 
@@ -371,33 +373,47 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     this.updateSvg(onEndFunction);
   },
 
-  setSvgColor : function()
+  assignWordColors : function()
   {
     this.colorPref[0] == "#444444" ? null : this.colorPref.unshift("#444444"); //add gray to colors list for "-1" ungrouped group
-    
     let hslColors = this.colorPref.map(d => d3.hsl(d)); //convert color list to hsl so we can manipulate lightness value
 
     let lightnessScale = d3.scaleLinear()
         .domain([0, d3.max(this.words, d => d.frequency)])
         .range([.8, .4]);
 
+    let app = this;
+    this.words.forEach(function(word)
+    {
+      word.color = app.lightnessPref ? d3.hsl(hslColors[word.semGroup].h, hslColors[word.semGroup].s, lightnessScale(word.frequency)) : hslColors[word.semGroup];
+    });
+  },
+
+  setSvgColor : function()
+  {
     if(this.rectBoundingPref || this.circleBoundingPref)
     {
       this.svg.selectAll(".cloudshape")
         .attr("stroke", "black")
-        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
+        .attr("fill", function(d)
+        { 
+          console.log(d.color)
+          return d.color
+      })
       this.svg.selectAll(".cloudtext")
         .attr("fill", "black")
     }
     else
     {
       this.svg.selectAll(".cloudtext")
-        .attr("fill", d => this.lightnessPref ? d3.hsl(hslColors[d.semGroup].h, hslColors[d.semGroup].s, lightnessScale(d.frequency)) : hslColors[d.semGroup])
+        .attr("fill", d => d.color)
     }
   },
 
   updateSvg : function(onEndFunction)
   {
+    this.assignWordColors();
+
     if(this.circleBoundingPref)
     {
       this.svg.selectAll(".cloudshape")
@@ -444,7 +460,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     const t = this.svg.transition()
       .duration(1250)
-      //.onend(() => this.setSvgColor());
+      .on("end", () => this.setSvgColor())
 
     this.svg.selectAll(".cloudtext")
       .data(this.words, d => d.text)
@@ -457,6 +473,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
           .attr("x", this.dimPref/2)
           .attr("y", this.dimPref/2)
+          .attr("fill", d => d.color)
           .attr("cursor", function(d){
             d.textSvg = this; //save text in word object--not sure where else to do it
             return "pointer";
@@ -469,6 +486,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
             .attr("x", d => d.x)
             .attr("y", d => d.y)
             .attr("font-size", d => d.fontSize)
+            //.attr("fill", d => d.color)
           ),
         update => update
           .attr("semGroup", d => d.semGroup)
@@ -500,8 +518,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     let extraWordsTemp = Array.from(document.querySelectorAll('#cloud text')).filter(d => (d['__data__'].x>this.dimPref/2 || d['__data__'].x<0-this.dimPref/2 || d['__data__'].y>this.dimPref/2 || d['__data__'].y<0-this.dimPref/2)).map(d => d['__data__']);
     //^words that were too big to include (didn't fit); note: this is only words that were placed but are too big to be shown, not words that hypothetically wouldn't fit
     this.extraWords = extraWordsTemp.concat(this.wordsParsed.filter(d => !this.words.includes(d))); //words that were too big or too small to include
-
-    this.setSvgColor();
 
     if(onEndFunction != undefined)
     {

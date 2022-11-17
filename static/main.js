@@ -1,15 +1,12 @@
 //this is the functionality specific to our site that references html+css and builds on the more generic app.js (which can also be importable into observable)
 define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'], function(d3, app, svgExportJS)
 {
-
-  let fileUploadLast = false; //keeps track of whether a file has been uploaded or the textarea input changed more recently, to know which one to use when generating
-
   let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeDark2, d3.schemeSet2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"]];
   let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4", "Color Scheme 5", "Color Scheme 6"];
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
   document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
 
-  app.initialize(.93*window.innerHeight);
+  app.initialize(.96*window.innerHeight);
 
   document.getElementById("wordCloudPreview").append(app.svg.node());
 
@@ -21,12 +18,8 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   //when new text has been added and the whole cloud creation process needs to happen
   function createFromScratch(fileUpload)
   {
-    fileUploadLast = fileUpload;
-
-    let fileInput = document.getElementById("fileInput");
+    let fileInput = document.querySelector("#fileInput input");
     let textInput = document.getElementById("rawTextInput");
-
-    fileUploadLast ? document.getElementById("fileInputRadio").checked = true : document.getElementById("rawTextInputRadio").checked = true;
 
     document.getElementById("showAllWords").checked = false;
     app.paddingPref = document.getElementById('paddingPref').value;
@@ -40,7 +33,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
     
-    if(fileUploadLast && fileInput.files.length>0) //create cloud from file input
+    if(fileUpload && fileInput.files.length>0) //create cloud from file input
     {
       let reader = new FileReader();
       reader.readAsText(fileInput.files[0]);
@@ -51,7 +44,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
         app.generateCoords(createExtraWordsList);
       };
     }
-    else if(!fileUploadLast && textInput.value.length>0) //create file from textarea input box
+    else if(!fileUpload && textInput.value.length>0) //create file from textarea input box
     {
       app.initializeWords(textInput.value);
       document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
@@ -64,11 +57,27 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     }
   }
 
-  document.getElementById("fileInput").onchange = () => createFromScratch(true);
-  document.getElementById("rawTextInput").onchange = () => createFromScratch(false);
-  document.getElementById("fileInputRadio").onchange = (e) => e.target.checked ? createFromScratch(true) : createFromScratch(false);
-  document.getElementById("rawTextInputRadio").onchange = (e) => e.target.checked ? createFromScratch(false) : createFromScratch(true);
-
+  document.querySelector("#fileInput input").onchange = function()
+  {
+    document.getElementById("rawTextInput").style.color = "#aaaaaa";
+    if(document.querySelector("#fileInput input").value.length > 0)
+    {
+      document.querySelector("#fileInput span").innerHTML = document.querySelector("#fileInput input").value;
+    }
+    else
+    {
+      document.querySelector("#fileInput span").innerHTML = "Select A File";
+    }
+    createFromScratch(true);
+  }
+  document.getElementById("rawTextInput").onfocus = () => document.getElementById("rawTextInput").style.color = "black";
+  document.getElementById("rawTextInput").onblur = function()
+  {
+    document.getElementById("rawTextInput").style.color = "black";
+    document.querySelector("#fileInput span").innerHTML = "Select A File";
+    createFromScratch(false);
+  }
+  
   document.getElementById("numWordsPref").onchange = function()
   {
     if(document.getElementById('numWordsPref').value != app.numWordsPref)
@@ -122,14 +131,12 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   document.getElementById("groupColorPref").oninput = function()
   {
     document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[colorSchemesText.indexOf(document.getElementById("groupColorPref").value)][i]);
-    app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
-    app.setSvgColor();
+    app.updateWithColorPref(Array.from(document.querySelectorAll('#customColors input')).map(d => d.value)); //convert to array (because it's actually a nodelist) and create array of hex color values
   }
 
   document.querySelectorAll("#customColors input").forEach((d) => d.oninput = function()
   {
-    app.colorPref = Array.from(document.querySelectorAll('#customColors input')).map(d => d.value); //convert to array (because it's actually a nodelist) and create array of hex color values
-    app.setSvgColor();
+    app.updateWithColorPref(Array.from(document.querySelectorAll('#customColors input')).map(d => d.value)); //convert to array (because it's actually a nodelist) and create array of hex color values
   });
 
   document.getElementById("lightnessPref").oninput = () => app.updateWithLightnessPref(document.getElementById('lightnessPref').checked);
