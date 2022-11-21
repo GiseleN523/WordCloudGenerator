@@ -135,6 +135,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       if(this.rectBoundingPref!=rectBoundingPref)
       {
         this.rectBoundingPref = rectBoundingPref;
+        this.rectBoundingPref == true ? this.circleBoundingPref = false : null;
         this.generateCoords(onEndFunction);
       }
     },
@@ -144,6 +145,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       if(this.circleBoundingPref!=circleBoundingPref)
       {
         this.circleBoundingPref = circleBoundingPref;
+        this.circleBoundingPref == true ? this.rectBoundingPref = false : null;
         this.generateCoords(onEndFunction);
       }
     },
@@ -395,11 +397,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     {
       this.svg.selectAll(".cloudshape")
         .attr("stroke", "black")
-        .attr("fill", function(d)
-        { 
-          console.log(d.color)
-          return d.color
-      })
+        .attr("fill", d => d.color)
       this.svg.selectAll(".cloudtext")
         .attr("fill", "black")
     }
@@ -414,8 +412,13 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
   {
     this.assignWordColors();
 
+    const t = this.svg.transition()
+      .duration(1250)
+      .on("end", () => this.setSvgColor())
+
     if(this.circleBoundingPref)
     {
+      this.svg.selectAll(".cloudshape").remove();
       this.svg.selectAll(".cloudshape")
         .data(this.words)
         .join("circle")
@@ -423,6 +426,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .attr("cx", d => d.x)
         .attr("cy", d => d.y)
         .attr("r", d => d.r)
+        .attr("fill", d => d.color)
+        .attr("stroke", "black")
         .attr("cursor", function(d){
           d.shapeSvg = this; //save circle in word object--not sure where else to do it
           return "pointer";
@@ -432,20 +437,39 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     }
     else if(this.rectBoundingPref)
     {
+      this.svg.selectAll(".cloudshape").remove();
       this.svg.selectAll(".cloudshape")
-        .data(this.words)
-        .join("rect")
-        .attr("class", "cloudshape")
-        .attr("x", d => d.x0+d.x)
-        .attr("y", d => d.y0+d.y)
-        .attr("width", d => d.width)
-        .attr("height", d => d.height)
-        .attr("cursor", function(d){
-          d.shapeSvg = this; //save rectangle in word object--not sure where else to do it
-          return "pointer";
-        })
-        .on('mouseover', (event, d) => this.showWordFreqTooltip(d)) 
-        .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
+        .data(this.words, d => d.text)
+        .join(
+          enter => enter.append('rect')
+            .attr("class", "cloudshape")
+            .attr("x", d => (this.dimPref/2) - d.width/2)
+            .attr("y", d => (this.dimPref/2) - d.height/2)
+            .attr("fill", d => d.color)
+            .attr("stroke", "black")
+            .attr("width", d => d.width)
+            .attr("height", d => d.height)
+            .attr("cursor", function(d){
+              d.shapeSvg = this; //save rectangle in word object--not sure where else to do it
+              return "pointer";
+            })
+            .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
+            .on('mouseout', (event, d) => this.hideWordFreqTooltip(d))
+            .call(enter => enter.transition(t)
+              .attr("x", d => d.x0+d.x)
+              .attr("y", d => d.y0+d.y)
+              .attr("font-size", d => d.fontSize)
+            ),
+          update => update
+            .attr("x", d => d.x0+d.x)
+            .attr("y", d => d.y0+d.y)
+            .attr("fill", d => d.color),
+          exit => exit
+            .call(exit => exit.transition(t)
+            .attr("font-size", 0)
+            .remove()
+          )
+        )
       this.words.forEach(function(d)
       {
         let context = document.createElement("canvas").getContext("2d");
@@ -457,10 +481,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     {
       this.svg.selectAll(".cloudshape").remove();
     }
-
-    const t = this.svg.transition()
-      .duration(1250)
-      .on("end", () => this.setSvgColor())
 
     this.svg.selectAll(".cloudtext")
       .data(this.words, d => d.text)
@@ -486,7 +506,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
             .attr("x", d => d.x)
             .attr("y", d => d.y)
             .attr("font-size", d => d.fontSize)
-            //.attr("fill", d => d.color)
           ),
         update => update
           .attr("semGroup", d => d.semGroup)

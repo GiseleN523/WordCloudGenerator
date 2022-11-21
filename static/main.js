@@ -73,9 +73,12 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   document.getElementById("rawTextInput").onfocus = () => document.getElementById("rawTextInput").style.color = "black";
   document.getElementById("rawTextInput").onblur = function()
   {
-    document.getElementById("rawTextInput").style.color = "black";
-    document.querySelector("#fileInput span").innerHTML = "Select A File";
-    createFromScratch(false);
+    if(document.getElementById("rawTextInput").value.length > 0)
+    {
+      document.getElementById("rawTextInput").style.color = "black";
+      document.querySelector("#fileInput span").innerHTML = "Select A File";
+      createFromScratch(false);
+    }
   }
   
   document.getElementById("numWordsPref").onchange = function()
