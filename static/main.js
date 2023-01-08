@@ -41,6 +41,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
       {
         app.initializeWords(reader.result);
         document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
+        document.getElementById("downloadSvgButton").style.display = "inline";
         app.generateCoords(createExtraWordsList);
       };
     }
@@ -48,12 +49,15 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     {
       app.initializeWords(textInput.value);
       document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
+      document.getElementById("downloadSvgButton").style.display = "inline";
       app.generateCoords(createExtraWordsList);
     }
     else
     {
       document.getElementById("wordCount").innerHTML = "";
-      document.getElementById("wordCloudPreview").innerHTML = ""; //clear previous word cloud
+      app.svg.selectAll(".cloudshape").attr("display", "none") //clear previous word cloud
+      app.svg.selectAll(".cloudtext").text("")
+      document.getElementById("downloadSvgButton").style.display = "none";
     }
   }
 

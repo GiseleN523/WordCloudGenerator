@@ -51,6 +51,13 @@ header
     padding-bottom: .2em;
 }
 
+#downloadSvgButton
+{
+    display: none;
+    font-size: 90%;
+    margin-left: 1.5%;
+}
+
 button, #fileInput
 {
     background-color: white;
