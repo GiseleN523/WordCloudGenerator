@@ -395,7 +395,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
   {
     if(this.rectBoundingPref || this.circleBoundingPref)
     {
-      this.svg.selectAll(".cloudshape")
+      this.svg.selectAll(".rectshape .circleshape")
         .attr("stroke", "black")
         .attr("fill", d => d.color)
       this.svg.selectAll(".cloudtext")
@@ -418,11 +418,12 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     if(this.circleBoundingPref)
     {
-      this.svg.selectAll(".cloudshape").remove();
-      this.svg.selectAll(".cloudshape")
+      //this.svg.selectAll(".rectshape").attr("display", "none");
+      this.svg.selectAll(".circleshape")
         .data(this.words)
         .join("circle")
-        .attr("class", "cloudshape")
+        .attr("display", "inline")
+        .attr("class", "circleshape")
         .attr("cx", d => d.x)
         .attr("cy", d => d.y)
         .attr("r", d => d.r)
@@ -437,12 +438,12 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     }
     else if(this.rectBoundingPref)
     {
-      this.svg.selectAll(".cloudshape").remove();
-      this.svg.selectAll(".cloudshape")
+      //this.svg.selectAll(".circleshape").attr("display", "none");
+      this.svg.selectAll(".rectshape")
         .data(this.words, d => d.text)
         .join(
           enter => enter.append('rect')
-            .attr("class", "cloudshape")
+            .attr("class", "rectshape")
             .attr("x", d => (this.dimPref/2) - d.width/2)
             .attr("y", d => (this.dimPref/2) - d.height/2)
             .attr("fill", d => d.color)
@@ -479,7 +480,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     }
     else
     {
-      this.svg.selectAll(".cloudshape").remove();
+      //this.svg.selectAll(".rectshape").attr("display", "none");
+      //this.svg.selectAll(".circleshape").attr("display", "none");
     }
 
     this.svg.selectAll(".cloudtext")

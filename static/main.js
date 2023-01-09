@@ -55,8 +55,8 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     else
     {
       document.getElementById("wordCount").innerHTML = "";
-      app.svg.selectAll(".cloudshape").attr("display", "none") //clear previous word cloud
-      app.svg.selectAll(".cloudtext").text("")
+      app.svg.selectAll(".cloudshape").attr("display", "none"); //clear previous word cloud
+      app.svg.selectAll(".cloudtext").text("");
       document.getElementById("downloadSvgButton").style.display = "none";
     }
   }
