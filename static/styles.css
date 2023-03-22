@@ -145,9 +145,17 @@ button:hover, #fileInput:hover
 #extraWordsList
 {
     margin: 2%;
-    overflow: scroll;
+    overflow-y: scroll;
     height: 200px;
     width: auto;
+}
+
+#graph
+{
+    margin: 2%;
+    overflow-x: scroll;
+    height: auto;
+    width: 95%;
 }
 
  .tooltip

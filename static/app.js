@@ -35,6 +35,10 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .data(this.words)
         .join("text")
         .attr("class", "cloudtext");
+
+      this.graphSvg = d3.create("svg")
+        .attr("width", "150%")
+        .attr("height", 200)
     },
 
     updateWithNumWordsPref(numWordsPref, onEndFunction)
@@ -406,6 +410,12 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       this.svg.selectAll(".cloudtext")
         .attr("fill", d => d.color)
     }
+    this.graphSvg.selectAll(".wordBar")
+      .attr("fill", function()
+      {
+        console.log(d);
+        console.log(d.color);
+      })//d => d.color)
   },
 
   updateSvg : function(onEndFunction)
@@ -544,6 +554,39 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     {
       onEndFunction(); //finally call function that was passed by main at the beginning of createCloud() to perform at end of cloud generation
     }
+
+    //make bar graph of words
+
+    let heightScale = d3.scaleLinear()
+      .domain([0, d3.max(this.words, d => d.frequency)])
+      .range([0, 200])
+
+    let app = this;
+    this.graphSvg.selectAll(".wordBar")
+      .data(app.wordsParsed)
+      .join("rect")
+      .attr("class", "wordBar")
+      .attr("x", (d, i) => (i*12))
+      .attr("y", d => 200-heightScale(d.frequency))
+      .attr("width", 10)
+      .attr("height", d => heightScale(d.frequency))
+      .attr("fill", d => d.color)
+      .on('mouseover', function(event, d, i) {
+        d3.select(this).attr("stroke", "black")
+        d3.select('#graphTooltip').text(d.text+": "+d.frequency+" instances");
+        d3.select('#graphTooltip').attr('x', event.target.x.animVal.value+12);
+        d3.select('#graphTooltip').attr('y', 200-heightScale(d.frequency) < 20 ? 20 : 200-heightScale(d.frequency)-6);
+      })
+      .on('mouseout', function(event, d) {
+        d3.select(this).attr("stroke", "none")
+        d3.select('#graphTooltip').text('');
+      });
+
+    this.graphSvg.append('text')
+      .attr('id', 'graphTooltip')
+      .attr('x', 10)
+      .attr('y', 20);
+
   }
 };
 });

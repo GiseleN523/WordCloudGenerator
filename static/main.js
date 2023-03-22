@@ -9,6 +9,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   app.initialize(.96*window.innerHeight);
 
   document.getElementById("wordCloudPreview").append(app.svg.node());
+  document.getElementById("graph").append(app.graphSvg.node());
 
   //populate stop words textarea with app's default stopwords
   document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
@@ -185,6 +186,15 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     if(extraWordsElem.scrollTop + extraWordsElem.clientHeight + 20 >= extraWordsElem.scrollHeight) 
     {
       appendToExtraWordsList(100);
+    }
+  };
+
+  document.getElementById("graph").onscroll = function() {
+    let graphElem = document.getElementById("graph");
+    if(graphElem.scrollLeft + graphElem.clientWidth + 20 >= graphElem.scrollWidth)// && graphElem.scrollWidth < app.graphSvg.) 
+    {
+      let currentWid = app.graphSvg.attr("width").replace("%", "");
+      app.graphSvg.attr("width", (Number(currentWid)+50)+"%");
     }
   };
 
