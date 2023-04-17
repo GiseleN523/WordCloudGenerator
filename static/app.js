@@ -30,6 +30,10 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       this.svg = d3.create("svg")
         .attr("width", this.dimPref)
         .attr("height", this.dimPref);
+
+      this.svg.append("g").attr("id", "boxesLayer")
+      this.svg.append("g").attr("id", "textLayer")
+      this.svg.append("g").attr("id", "tooltipLayer")
         
       this.svg.selectAll("text")
         .data(this.words)
@@ -38,7 +42,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
       this.graphSvg = d3.create("svg")
         .attr("width", "150%")
-        .attr("height", 200)
+        .attr("height", 275)
     },
 
     updateWithNumWordsPref(numWordsPref, onEndFunction)
@@ -156,6 +160,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     showWordFreqTooltip : function(word)
     {
+      console.log(word);
       d3.select('#wordFreqTooltip')
         .text(word.text+": "+word.frequency+" instances")
         .attr('x', word.x)
@@ -210,6 +215,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref
         this.words.pop();
       }
+
+      this.graphSvg.selectAll(".barLabels")
 
       this.words.forEach(d => d.semGroup++); //since we still have group -1, increase all semantic group numbers by 1 to make them >=0
       this.setWordSizes();
@@ -391,6 +398,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     let app = this;
     this.words.forEach(function(word)
     {
+      word.colorPure = hslColors[word.semGroup];
       word.color = app.lightnessPref ? d3.hsl(hslColors[word.semGroup].h, hslColors[word.semGroup].s, lightnessScale(word.frequency)) : hslColors[word.semGroup];
     });
   },
@@ -411,11 +419,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .attr("fill", d => d.color)
     }
     this.graphSvg.selectAll(".wordBar")
-      .attr("fill", function()
-      {
-        console.log(d);
-        console.log(d.color);
-      })//d => d.color)
+      .attr("fill", d => d.colorPure)
   },
 
   updateSvg : function(onEndFunction)
@@ -428,10 +432,11 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     if(this.circleBoundingPref)
     {
-      //this.svg.selectAll(".rectshape").attr("display", "none");
-      this.svg.selectAll(".circleshape")
+      this.svg.selectAll(".rectshape").attr("display", "none");
+      this.svg.select('#boxesLayer').selectAll(".circleshape")
         .data(this.words)
         .join("circle")
+        .attr("display", "block")
         .attr("display", "inline")
         .attr("class", "circleshape")
         .attr("cx", d => d.x)
@@ -448,12 +453,13 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     }
     else if(this.rectBoundingPref)
     {
-      //this.svg.selectAll(".circleshape").attr("display", "none");
-      this.svg.selectAll(".rectshape")
+      this.svg.selectAll(".circleshape").attr("display", "none");
+      this.svg.select('#boxesLayer').selectAll(".rectshape")
         .data(this.words, d => d.text)
         .join(
           enter => enter.append('rect')
             .attr("class", "rectshape")
+            .attr("display", "block")
             .attr("x", d => (this.dimPref/2) - d.width/2)
             .attr("y", d => (this.dimPref/2) - d.height/2)
             .attr("fill", d => d.color)
@@ -472,6 +478,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
               .attr("font-size", d => d.fontSize)
             ),
           update => update
+            .attr("display", "block")
             .attr("x", d => d.x0+d.x)
             .attr("y", d => d.y0+d.y)
             .attr("fill", d => d.color),
@@ -490,11 +497,11 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     }
     else
     {
-      //this.svg.selectAll(".rectshape").attr("display", "none");
-      //this.svg.selectAll(".circleshape").attr("display", "none");
+      this.svg.selectAll(".rectshape").attr("display", "none");
+      this.svg.selectAll(".circleshape").attr("display", "none");
     }
 
-    this.svg.selectAll(".cloudtext")
+    this.svg.select("#textLayer").selectAll(".cloudtext")
       .data(this.words, d => d.text)
       .join(
         enter => enter.append('text')
@@ -533,14 +540,14 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           )
       )
 
-    this.svg.append('rect')
+      this.svg.select("#tooltipLayer").append('rect')
       .attr('id', 'wordFreqTooltipBackground')
       .attr('fill', 'white')
       .attr('stroke', 'black')
       .attr('rx', '5')
       .attr('display', 'none');
 
-    this.svg.append('text')
+      this.svg.select("#tooltipLayer").append('text')
       .attr('id', 'wordFreqTooltip')
       .attr('font-size', '16')
       .attr('display', 'none');
@@ -566,21 +573,38 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       .data(app.wordsParsed)
       .join("rect")
       .attr("class", "wordBar")
-      .attr("x", (d, i) => (i*12))
+      .attr("x", (d, i) => (i*14))
       .attr("y", d => 200-heightScale(d.frequency))
       .attr("width", 10)
       .attr("height", d => heightScale(d.frequency))
-      .attr("fill", d => d.color)
+      .attr("fill", d => d.colorPure)
       .on('mouseover', function(event, d, i) {
-        d3.select(this).attr("stroke", "black")
+        console.log(d.semGroup)
+        if(d.color != undefined) //only highlight corresponding word in cloud if this word is actually in the cloud
+        {
+          app.showWordFreqTooltip(d);
+        }
+        d3.select(this).attr("stroke", "black");
         d3.select('#graphTooltip').text(d.text+": "+d.frequency+" instances");
         d3.select('#graphTooltip').attr('x', event.target.x.animVal.value+12);
         d3.select('#graphTooltip').attr('y', 200-heightScale(d.frequency) < 20 ? 20 : 200-heightScale(d.frequency)-6);
       })
       .on('mouseout', function(event, d) {
+        app.hideWordFreqTooltip(d)
         d3.select(this).attr("stroke", "none")
         d3.select('#graphTooltip').text('');
       });
+
+    this.graphSvg.selectAll(".barLabels")
+      .data(app.wordsParsed)
+      .join("text")
+      .text(d => d.text)
+      .attr("class", "wordBarLabel")
+      .attr("x", (d, i) => (i*14))
+      .attr("y", 212)
+      .attr('font-size', 11)
+      .attr('text-anchor', 'end')
+      .attr('transform', (d,i) => 'rotate(-90,'+(i*14)+',203)')
 
     this.graphSvg.append('text')
       .attr('id', 'graphTooltip')
