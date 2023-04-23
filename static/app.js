@@ -158,9 +158,38 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       }
     },
 
-    showWordFreqTooltip : function(word)
+    highlightWord : function(word) //in both cloud and graph
     {
-      console.log(word);
+      if(word.color != undefined) //only highlight corresponding word in cloud if this word is actually in the cloud
+      {
+        this.highlightWordInCloud(word);
+      }
+      this.highlightWordInGraph(word);
+    },
+
+    unhighlightWord : function(word)
+    {
+      this.unhighlightWordInCloud(word);
+      this.unhighlightWordInGraph(word);
+    },
+
+    highlightWordInGraph : function(word)
+    {
+      d3.select(word.barSvg).attr("stroke", "black");
+      d3.select(word.barSvg).attr("stroke-width", "2px");
+      d3.select('#graphTooltip').text(word.text+": "+word.frequency+" instances");
+      d3.select('#graphTooltip').attr('x', word.barSvg.x.animVal.value+12);
+      d3.select('#graphTooltip').attr('y', 200-(word.barSvg.height.animVal.value) < 20 ? 20 : 200-(word.barSvg.height.animVal.value)-6);
+    },
+
+    unhighlightWordInGraph : function(word)
+    {
+      d3.select(word.barSvg).attr("stroke", "none")
+      d3.select('#graphTooltip').text('');
+    },
+
+    highlightWordInCloud : function(word)
+    {
       d3.select('#wordFreqTooltip')
         .text(word.text+": "+word.frequency+" instances")
         .attr('x', word.x)
@@ -184,7 +213,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .attr('display', 'block');
     },
 
-    hideWordFreqTooltip : function(word)
+    unhighlightWordInCloud : function(word)
     {
       d3.select('#wordFreqTooltip').attr('display', 'none');
       d3.select("#wordFreqTooltipBackground").attr('display', 'none');
@@ -448,8 +477,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           d.shapeSvg = this; //save circle in word object--not sure where else to do it
           return "pointer";
         })
-        .on('mouseover', (event, d) => this.showWordFreqTooltip(d)) //is there a better way to get the source?
-        .on('mouseout', (event, d) => this.hideWordFreqTooltip(d));
+        .on('mouseover', (event, d) => this.highlightWord(d)) //is there a better way to get the source?
+        .on('mouseout', (event, d) => this.unhighlightWord(d));
     }
     else if(this.rectBoundingPref)
     {
@@ -470,8 +499,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
               d.shapeSvg = this; //save rectangle in word object--not sure where else to do it
               return "pointer";
             })
-            .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
-            .on('mouseout', (event, d) => this.hideWordFreqTooltip(d))
+            .on('mouseover', (event, d) => this.highlightWord(d))
+            .on('mouseout', (event, d) => this.unhighlightWord(d))
             .call(enter => enter.transition(t)
               .attr("x", d => d.x0+d.x)
               .attr("y", d => d.y0+d.y)
@@ -509,7 +538,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           .attr("font-size", 0)
           .attr("font-family", d => d.font)
           .attr("text-anchor", "middle") //important for rendering in the way d3-cloud intended
-          .attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
+          //.attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
           .attr("x", this.dimPref/2)
           .attr("y", this.dimPref/2)
           .attr("fill", d => d.color)
@@ -519,8 +548,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           })
           .attr("semGroup", d => d.semGroup)
           .text(d => d.text)
-          .on('mouseover', (event, d) => this.showWordFreqTooltip(d))
-          .on('mouseout', (event, d) => this.hideWordFreqTooltip(d))
+          .on('mouseover', (event, d) => this.highlightWord(d))
+          .on('mouseout', (event, d) => this.unhighlightWord(d))
           .call(enter => enter.transition(t)
             .attr("x", d => d.x)
             .attr("y", d => d.y)
@@ -540,14 +569,16 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
           )
       )
 
-      this.svg.select("#tooltipLayer").append('rect')
+    this.svg.select("#textLayer").selectAll(".cloudtext").attr("alignment-baseline", this.circleBoundingPref ? "middle" : "auto")
+
+    this.svg.select("#tooltipLayer").append('rect')
       .attr('id', 'wordFreqTooltipBackground')
       .attr('fill', 'white')
       .attr('stroke', 'black')
       .attr('rx', '5')
       .attr('display', 'none');
 
-      this.svg.select("#tooltipLayer").append('text')
+    this.svg.select("#tooltipLayer").append('text')
       .attr('id', 'wordFreqTooltip')
       .attr('font-size', '16')
       .attr('display', 'none');
@@ -578,22 +609,12 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       .attr("width", 10)
       .attr("height", d => heightScale(d.frequency))
       .attr("fill", d => d.colorPure)
-      .on('mouseover', function(event, d, i) {
-        console.log(d.semGroup)
-        if(d.color != undefined) //only highlight corresponding word in cloud if this word is actually in the cloud
-        {
-          app.showWordFreqTooltip(d);
-        }
-        d3.select(this).attr("stroke", "black");
-        d3.select('#graphTooltip').text(d.text+": "+d.frequency+" instances");
-        d3.select('#graphTooltip').attr('x', event.target.x.animVal.value+12);
-        d3.select('#graphTooltip').attr('y', 200-heightScale(d.frequency) < 20 ? 20 : 200-heightScale(d.frequency)-6);
+      .attr("cursor", function(d){
+        d.barSvg = this; //this is super messy; need to find a better place to assign this
+        return "pointer";
       })
-      .on('mouseout', function(event, d) {
-        app.hideWordFreqTooltip(d)
-        d3.select(this).attr("stroke", "none")
-        d3.select('#graphTooltip').text('');
-      });
+      .on('mouseover', (event, d) => app.highlightWord(d))
+      .on('mouseout', (event, d) => app.unhighlightWord(d));
 
     this.graphSvg.selectAll(".barLabels")
       .data(app.wordsParsed)
@@ -601,10 +622,10 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       .text(d => d.text)
       .attr("class", "wordBarLabel")
       .attr("x", (d, i) => (i*14))
-      .attr("y", 212)
-      .attr('font-size', 11)
-      .attr('text-anchor', 'end')
-      .attr('transform', (d,i) => 'rotate(-90,'+(i*14)+',203)')
+      .attr("y", 215)
+      .attr('font-size', 10)
+      //.attr('transform', (d,i) => 'rotate(90, '+((i*14)-3)+',202)') //vertical
+      .attr('transform', (d,i) => 'rotate(45, '+((i*14)+10)+',210)')
 
     this.graphSvg.append('text')
       .attr('id', 'graphTooltip')

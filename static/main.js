@@ -1,8 +1,8 @@
 //this is the functionality specific to our site that references html+css and builds on the more generic app.js (which can also be importable into observable)
 define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'], function(d3, app, svgExportJS)
 {
-  let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeDark2, d3.schemeSet2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"]];
-  let colorSchemesText = ["Color Scheme 1", "Color Scheme 2", "Color Scheme 3", "Color Scheme 4", "Color Scheme 5", "Color Scheme 6"];
+  let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeSet2, d3.schemeDark2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"]];
+  let colorSchemesText = ["Tableau 10", "Set 1", "Set 2", "Dark 2", "Category 10", "Dutch Field"];
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
   document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
 
