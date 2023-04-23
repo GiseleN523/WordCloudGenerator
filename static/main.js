@@ -9,7 +9,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   app.initialize(.96*window.innerHeight);
 
   document.getElementById("wordCloudPreview").append(app.svg.node());
-  document.getElementById("graph").append(app.graphSvg.node());
+  document.getElementById("wordBarGraph").append(app.graphSvg.node());
 
   //populate stop words textarea with app's default stopwords
   document.getElementById("stopWordsBoxPref").value = app.stopWords.toString().replaceAll(",", " ");
@@ -22,7 +22,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     let fileInput = document.querySelector("#fileInput input");
     let textInput = document.getElementById("rawTextInput");
 
-    document.getElementById("showAllWords").checked = false;
+    //document.getElementById("showAllWords").checked = false;
     app.paddingPref = document.getElementById('paddingPref').value;
     app.numWordsPref = document.getElementById('numWordsPref').value;
     app.minCountPref = document.getElementById('minCountPref').value;
@@ -43,7 +43,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
         app.initializeWords(reader.result);
         document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
         document.getElementById("downloadSvgButton").style.display = "inline";
-        app.generateCoords(createExtraWordsList);
+        app.generateCoords(showBarGraph);//createExtraWordsList);
       };
     }
     else if(!fileUpload && textInput.value.length>0) //create file from textarea input box
@@ -51,7 +51,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
       app.initializeWords(textInput.value);
       document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
       document.getElementById("downloadSvgButton").style.display = "inline";
-      app.generateCoords(createExtraWordsList);
+      app.generateCoords(showBarGraph);//createExtraWordsList);
     }
     else
     {
@@ -59,6 +59,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
       app.svg.selectAll(".cloudshape").attr("display", "none"); //clear previous word cloud
       app.svg.selectAll(".cloudtext").text("");
       document.getElementById("downloadSvgButton").style.display = "none";
+      document.getElementById("wordBarGraph").display = "block";
     }
   }
 
@@ -90,7 +91,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   {
     if(document.getElementById('numWordsPref').value != app.numWordsPref)
     {
-      app.updateWithNumWordsPref(document.getElementById('numWordsPref').value, createExtraWordsList);
+      app.updateWithNumWordsPref(document.getElementById('numWordsPref').value, showBarGraph);//, createExtraWordsList);
     }
   }
 
@@ -98,7 +99,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   {
     if(document.getElementById('minCountPref').value != app.minCountPref)
     {
-      app.updateWithMinCountPref(document.getElementById('minCountPref').value, createExtraWordsList);
+      app.updateWithMinCountPref(document.getElementById('minCountPref').value, showBarGraph);//, createExtraWordsList);
     }
   }
 
@@ -181,27 +182,32 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   document.querySelectorAll(".prefGroup h3").forEach((d) => d.onclick = (e) => hideGroup(e.target.parentNode));
 
   //load more words to list of "extra words" if user approaches the bottom of currently loaded list
-  document.getElementById("extraWordsList").onscroll = function() {
+  /*document.getElementById("extraWordsList").onscroll = function() {
     let extraWordsElem = document.getElementById("extraWordsList");
     if(extraWordsElem.scrollTop + extraWordsElem.clientHeight + 20 >= extraWordsElem.scrollHeight) 
     {
       appendToExtraWordsList(100);
     }
-  };
+  };*/
 
-  document.getElementById("graph").onscroll = function() {
-    let graphElem = document.getElementById("graph");
-    if(graphElem.scrollLeft + graphElem.clientWidth + 20 >= graphElem.scrollWidth)// && graphElem.scrollWidth < app.graphSvg.) 
+  document.getElementById("wordBarGraph").onscroll = function() {
+    let graphElem = document.getElementById("wordBarGraph");
+    if(graphElem.scrollLeft + graphElem.clientWidth + 30 >= graphElem.scrollWidth)// && graphElem.scrollWidth < app.graphSvg.) 
     {
       let currentWid = app.graphSvg.attr("width").replace("%", "");
       app.graphSvg.attr("width", (Number(currentWid)+50)+"%");
     }
   };
 
-  //either add or remove words that are in cloud to existing "extra words" list
-  document.getElementById("showAllWords").onchange = function()
+  function showBarGraph()
   {
-    let currentNumExtraShown = document.querySelectorAll("#extraWordsList .extraWord").length;
+    document.getElementById("wordBarGraph").style.display = "block";
+  }
+
+  //either add or remove words that are in cloud to existing "extra words" list
+  /*document.getElementById("showAllWords").onchange = function()
+  {
+    //let currentNumExtraShown = document.querySelectorAll("#extraWordsList .extraWord").length;
     document.getElementById("extraWordsList").innerHTML="";
     if(document.getElementById("showAllWords").checked)
     {
@@ -238,5 +244,5 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
       document.getElementById("extraWordsList").innerHTML+="<li class='extraWord'>"+word.text+" : "+word.frequency+" instances</li>";
       i++;
     }
-  }
+  }*/
 })

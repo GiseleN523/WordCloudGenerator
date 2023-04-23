@@ -136,26 +136,13 @@ button:hover, #fileInput:hover
     margin-top: 3%;
 }
 
-#extraWords
-{
-    display: none;
-    margin-top: 2%;
-}
-
-#extraWordsList
-{
-    margin: 2%;
-    overflow-y: scroll;
-    height: 200px;
-    width: auto;
-}
-
-#graph
+#wordBarGraph
 {
     margin: 2%;
     overflow-x: scroll;
     height: auto;
     width: 95%;
+    display: none;
 }
 
  .tooltip
