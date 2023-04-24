@@ -45,5 +45,5 @@ The main logic of our program was written using Javascript, but our website inte
 
 Our code is modularized so that our basic word cloud generator functionality can be used on its own without our interface, such as by importing it into Observable Notebooks (observablehq.com). In order to import our code into Observable, we had to learn how to make sure it met the Asynchronous Module Definition (AMD) specification, a specific organizational format that is required by Observable. You can see an example of us doing so [here](https://observablehq.com/d/95aef5d4b44603b7).
 
-### A Improvement:
+### Future Improvements:
 Our current semantic grouping algorithm is based on a Google News training datset, and it is unfortunately lacking a lot of common words. We would like to include multiple training datasets and give the user the option to choose the dataset that most closely fits the type of text they are uploading. We would also like the ability to have multiple semantic grouping algorithms that they can choose between.
