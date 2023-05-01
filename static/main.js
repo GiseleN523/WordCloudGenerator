@@ -6,7 +6,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
   document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
 
-  app.initialize(.96*window.innerHeight);
+  app.initialize(.96*window.innerHeight, onEndOfHighlightWord);
 
   document.getElementById("wordCloudPreview").append(app.svg.node());
   document.getElementById("wordBarGraph").append(app.graphSvg.node());
@@ -34,7 +34,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
     app.rectBoundingPref = document.getElementById('rectBoundingPref').checked;
     app.circleBoundingPref = document.getElementById('circleBoundingPref').checked;
     
-    if(fileUpload && fileInput.files.length>0) //create cloud from file input
+    if(fileUpload) //create cloud from file input
     {
       let reader = new FileReader();
       reader.readAsText(fileInput.files[0]);
@@ -46,21 +46,28 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
         app.generateCoords(showBarGraph);//createExtraWordsList);
       };
     }
-    else if(!fileUpload && textInput.value.length>0) //create file from textarea input box
+    else //create file from textarea input box
     {
       app.initializeWords(textInput.value);
       document.getElementById("wordCount").innerHTML = "Number of Unique Words (excluding stop words): "+app.wordsParsed.length;
       document.getElementById("downloadSvgButton").style.display = "inline";
       app.generateCoords(showBarGraph);//createExtraWordsList);
     }
-    else
+  }
+
+  function onEndOfHighlightWord(word)
+  {
+    let x = word.barSvg.x.baseVal.value;
+    let scrollX = document.getElementById("wordBarGraph").scrollLeft;
+    let wid = (document.getElementById("wordBarGraph").clientWidth)
+    if(x < scrollX || x > scrollX + wid)
     {
-      document.getElementById("wordCount").innerHTML = "";
-      app.svg.selectAll(".cloudshape").attr("display", "none"); //clear previous word cloud
-      app.svg.selectAll(".cloudtext").text("");
-      document.getElementById("downloadSvgButton").style.display = "none";
-      document.getElementById("wordBarGraph").display = "block";
-    }
+      document.getElementById("wordBarGraph").scrollTo({
+        top: 0,
+        left: x - (wid/2),
+        behavior: "smooth",
+      });
+    } 
   }
 
   document.querySelector("#fileInput input").onchange = function()
@@ -91,7 +98,7 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   {
     if(document.getElementById('numWordsPref').value != app.numWordsPref)
     {
-      app.updateWithNumWordsPref(document.getElementById('numWordsPref').value, showBarGraph);//, createExtraWordsList);
+      app.updateWithNumWordsPref(document.getElementById('numWordsPref').value, showBarGraph);
     }
   }
 
@@ -158,12 +165,16 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   {
     document.getElementById("circleBoundingPref").checked = false;
     app.updateWithRectBoundingPref(document.getElementById('rectBoundingPref').checked);
+    document.getElementById("fontSizePref").value = app.fontSizePref;
+    document.getElementById("fontSizeLabel").innerHTML = app.fontSizePref;
   }
   
   document.getElementById("circleBoundingPref").onchange = function()
   {
     document.getElementById("rectBoundingPref").checked = false;
     app.updateWithCircleBoundingPref(document.getElementById('circleBoundingPref').checked);
+    document.getElementById("fontSizePref").value = app.fontSizePref;
+    document.getElementById("fontSizeLabel").innerHTML = app.fontSizePref;
   }
 
   function hideGroup(group) //hide/compress settings group and switch h3 (tab header) event listener to show/expand group when clicked
@@ -181,21 +192,12 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   //hide groups if their tab header is clicked
   document.querySelectorAll(".prefGroup h3").forEach((d) => d.onclick = (e) => hideGroup(e.target.parentNode));
 
-  //load more words to list of "extra words" if user approaches the bottom of currently loaded list
-  /*document.getElementById("extraWordsList").onscroll = function() {
-    let extraWordsElem = document.getElementById("extraWordsList");
-    if(extraWordsElem.scrollTop + extraWordsElem.clientHeight + 20 >= extraWordsElem.scrollHeight) 
-    {
-      appendToExtraWordsList(100);
-    }
-  };*/
-
   document.getElementById("wordBarGraph").onscroll = function() {
     let graphElem = document.getElementById("wordBarGraph");
-    if(graphElem.scrollLeft + graphElem.clientWidth + 30 >= graphElem.scrollWidth)// && graphElem.scrollWidth < app.graphSvg.) 
+    if(graphElem.scrollLeft + graphElem.clientWidth + 30 >= graphElem.scrollWidth)
     {
       let currentWid = app.graphSvg.attr("width").replace("%", "");
-      app.graphSvg.attr("width", (Number(currentWid)+50)+"%");
+      app.graphSvg.attr("width", (Number(currentWid)+100)+"%");
     }
   };
 
@@ -203,46 +205,4 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   {
     document.getElementById("wordBarGraph").style.display = "block";
   }
-
-  //either add or remove words that are in cloud to existing "extra words" list
-  /*document.getElementById("showAllWords").onchange = function()
-  {
-    //let currentNumExtraShown = document.querySelectorAll("#extraWordsList .extraWord").length;
-    document.getElementById("extraWordsList").innerHTML="";
-    if(document.getElementById("showAllWords").checked)
-    {
-      for(let i=0; i<app.words.length; i++)
-      {
-        document.getElementById("extraWordsList").innerHTML+="<li style='color: darkgray'>"+app.words[i].text+" : "+app.words[i].frequency+" instances</li>";
-      }
-      for(let i=0; i<currentNumExtraShown; i++)
-      {
-        document.getElementById("extraWordsList").innerHTML+="<li class='extraWord'>"+app.extraWords[i].text+" : "+app.extraWords[i].frequency+" instances</li>";
-      }
-    }
-    else
-    {
-      appendToExtraWordsList(currentNumExtraShown);
-    }
-  }
-
-  function createExtraWordsList()
-  {
-    document.getElementById("extraWords").style.display = "block";
-    document.getElementById("extraWordsList").innerHTML = "";
-    appendToExtraWordsList(100);
-  }
-
-  //add the given number of "extra words" to the list in the dom
-  function appendToExtraWordsList(numToAdd)
-  {
-    let i = 0;
-    let startingInd = document.getElementById("extraWordsList").children.length;
-    while(i+startingInd<app.extraWords.length && i<numToAdd)
-    {
-      let word = app.extraWords[i+startingInd];
-      document.getElementById("extraWordsList").innerHTML+="<li class='extraWord'>"+word.text+" : "+word.frequency+" instances</li>";
-      i++;
-    }
-  }*/
 })

@@ -7,9 +7,10 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
   return {
     wordsRaw : [],
-    words : [],
+    words : [], //cloud words
+    wordCount : 0,
     stopWords : defaultStop.split(" "),
-    wordsParsed : [],
+    wordsParsed : [], //all words after being parsed
     extraWords : [], //words that aren't stop words but weren't included in the cloud for various reasons
     dimPref : 700,
     paddingPref : 3,
@@ -23,9 +24,10 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     rectBoundingPref : false,
     circleBoundingPref : false,
 
-    initialize : function(dimPref)
+    initialize : function(dimPref, onEndOfHighlightWord)
     {   
       this.dimPref = dimPref;
+      this.onEndOfHighlightWord = onEndOfHighlightWord;
 
       this.svg = d3.create("svg")
         .attr("width", this.dimPref)
@@ -41,7 +43,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         .attr("class", "cloudtext");
 
       this.graphSvg = d3.create("svg")
-        .attr("width", "150%")
+        .attr("width", "600%")
         .attr("height", 275)
     },
 
@@ -69,6 +71,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     updateWithStopWordsPref(stopWordsPref, onEndFunction)
     {
+      this.svg.selectAll(".rectshape").remove(); //definitely a bit of a workaround, but this forces rectshapes to regenerate and update
       this.stopWordPref = stopWordsPref;
       let oldWords = this.words;
       this.initializeWords(this.wordsRaw);
@@ -80,6 +83,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     updateWithStopWords(stopWords, onEndFunction)
     {
+      this.svg.selectAll(".rectshape").remove(); //definitely a bit of a workaround, but this forces rectshapes to regenerate and update
       this.stopWords = stopWords;
       let oldWords = this.words;
       this.initializeWords(this.wordsRaw);
@@ -91,7 +95,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     updateWithFontSizePref(fontSizePref, onEndFunction)
     {
-      if(this.fontSizePref != fontSizePref)
+      this.svg.selectAll(".rectshape").remove(); //definitely a bit of a workaround, but this forces rectshapes to regenerate and update
+      if(fontSizePref != this.fontSizePref)
       {
         this.fontSizePref = fontSizePref;
         this.setWordSizes();
@@ -101,11 +106,14 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
 
     changeFontSizeNoPositionUpdate(fontSizePref)
     {
-      this.fontSizePref = fontSizePref;
-      this.setWordSizes();
-      this.svg.selectAll(".cloudtext")
-        .data(this.words)
-        .attr("font-size", d => d.fontSize)
+      if(fontSizePref != this.fontSizePref)
+      {
+        this.fontSizePref = fontSizePref;
+        this.setWordSizes();
+        this.svg.selectAll(".cloudtext")
+          .data(this.words)
+          .attr("font-size", d => d.fontSize)
+      }
     },
 
     updateWithPaddingPref(paddingPref, onEndFunction)
@@ -143,7 +151,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       if(this.rectBoundingPref!=rectBoundingPref)
       {
         this.rectBoundingPref = rectBoundingPref;
-        this.rectBoundingPref == true ? this.circleBoundingPref = false : null;
+        if(this.rectBoundingPref)
+        {
+          this.circleBoundingPref = false;
+          this.changeFontSizeNoPositionUpdate(20);
+        }
+        else
+        {
+          this.changeFontSizeNoPositionUpdate(40);
+        }
         this.generateCoords(onEndFunction);
       }
     },
@@ -153,7 +169,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       if(this.circleBoundingPref!=circleBoundingPref)
       {
         this.circleBoundingPref = circleBoundingPref;
-        this.circleBoundingPref == true ? this.rectBoundingPref = false : null;
+        if(this.circleBoundingPref)
+        {
+          this.rectBoundingPref = false
+          this.changeFontSizeNoPositionUpdate(20);
+        }
+        else
+        {
+          this.changeFontSizeNoPositionUpdate(40);
+        }
         this.generateCoords(onEndFunction);
       }
     },
@@ -165,6 +189,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         this.highlightWordInCloud(word);
       }
       this.highlightWordInGraph(word);
+      this.onEndOfHighlightWord(word);
     },
 
     unhighlightWord : function(word)
@@ -177,7 +202,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     {
       d3.select(word.barSvg).attr("stroke", "black");
       d3.select(word.barSvg).attr("stroke-width", "2px");
-      d3.select('#graphTooltip').text(word.text+": "+word.frequency+" instances");
+      d3.select('#graphTooltip').text(word.text+": "+word.frequency+" times ("+(word.frequency/this.wordCount*100).toFixed(3)+"%)");
       d3.select('#graphTooltip').attr('x', word.barSvg.x.animVal.value+12);
       d3.select('#graphTooltip').attr('y', 200-(word.barSvg.height.animVal.value) < 20 ? 20 : 200-(word.barSvg.height.animVal.value)-6);
     },
@@ -191,7 +216,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     highlightWordInCloud : function(word)
     {
       d3.select('#wordFreqTooltip')
-        .text(word.text+": "+word.frequency+" instances")
+        .text(word.text+": "+word.frequency+" times ("+(word.frequency/this.wordCount*100).toFixed(3)+"%)")
         .attr('x', word.x)
         .attr('y', word.y+25)
         .attr("text-anchor", "middle")
@@ -238,6 +263,15 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     initializeWords : function(wordsRaw)
     {
       this.wordsRaw = wordsRaw;
+
+      //from parser
+      let cleanText = this.wordsRaw.split('\n').join(' ').split('\r').join(' ');
+      cleanText = cleanText.replace(/[;:\[\]()“”."!?,–_—\*-]/g, " ");
+      let cleanWords = cleanText.split(' ');
+      wordCount = 0;
+      cleanWords.forEach((c) => (c.length > 0) ? wordCount++ : null);
+      this.wordCount = wordCount;
+
       this.wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
       this.words = this.wordsParsed.slice(0, Math.min(this.wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
       while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<this.wordsParsed.length && this.words[this.words.length-1].frequency === this.wordsParsed[this.words.length].frequency)))
@@ -245,7 +279,8 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
         this.words.pop();
       }
 
-      this.graphSvg.selectAll(".barLabels")
+      this.graphSvg.selectAll(".wordBarLabel").remove(); //remove bar graph labels, otherwise the new ones will just be added on top
+      this.svg.selectAll(".rectshape").remove(); //definitely a bit of a workaround, but this forces rectshapes to regenerate and update
 
       this.words.forEach(d => d.semGroup++); //since we still have group -1, increase all semantic group numbers by 1 to make them >=0
       this.setWordSizes();
@@ -616,7 +651,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       .on('mouseover', (event, d) => app.highlightWord(d))
       .on('mouseout', (event, d) => app.unhighlightWord(d));
 
-    this.graphSvg.selectAll(".barLabels")
+    this.graphSvg.selectAll(".wordBarLabel")
       .data(app.wordsParsed)
       .join("text")
       .text(d => d.text)
@@ -631,7 +666,6 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       .attr('id', 'graphTooltip')
       .attr('x', 10)
       .attr('y', 20);
-
   }
 };
 });
