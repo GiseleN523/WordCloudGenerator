@@ -1,12 +1,31 @@
 //this is the functionality specific to our site that references html+css and builds on the more generic app.js (which can also be importable into observable)
-define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js'], function(d3, app, svgExportJS)
+requirejs.config({
+  waitSeconds: 60 //make sure the semantic grouping models have enough time to be loaded in
+})
+
+define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min.js', 'text!SemanticGroupingModels/gensim_googlenews.txt', 'text!SemanticGroupingModels/gensim_twitter.txt', 'text!SemanticGroupingModels/gensim_wikipedia.txt', 'SemanticGroupingModels/liu_googlenews', 'text!SemanticGroupingModels/wiki_wordvecs_shortened.txt','text!SemanticGroupingModels/gigaword_wordvecs_shortened.txt', 'text!SemanticGroupingModels/britishnationalcorpus_wordvecs_shortened.txt'], function(d3, app, svgExportJS, googlenews, twitter, wiki2, googlenews2, wiki, englishgigaword, britishnationalcorpus)
 {
   let colorSchemes = [d3.schemeTableau10, d3.schemeSet1, d3.schemeSet2, d3.schemeDark2, d3.schemeCategory10, ["#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"]];
   let colorSchemesText = ["Tableau 10", "Set 1", "Set 2", "Dark 2", "Category 10", "Dutch Field"];
   colorSchemesText.forEach(d => document.getElementById("groupColorPref").innerHTML+='<option value="'+d+'">'+d+'</option>');
   document.querySelectorAll("#customColors input").forEach((d, i) => d.value = colorSchemes[0][i]);
 
-  app.initialize(.96*window.innerHeight, onEndOfHighlightWord);
+  //add names of semantic models to page and save corresponding functions to call when user selects each one
+  let semGroupModels = ["Gensim Google News Word2Vec", "Gensim Twitter GloVe", "Gensim Wikipedia fastText", "Anthony Liu Google News Word2Vec", "Nordic Language Processing Laboratory (NLPL) Wikipedia Word2Vec", "NLPL Gigaword Word2Vec", "NLPL British National Corpus Word2Vec"];
+  let semGroupLoadMethods = [getGooglenewsDict, getTwitterDict, getWiki2Dict, getGooglenews2Dict, getWikiDict, getGigawordDict, getBNCDict];
+  semGroupModels.forEach(function(model)
+  {
+    document.getElementById("semModelInput").innerHTML += "<option value='" + model + "'>" + model + "</option>";
+  });
+
+  let model = semGroupLoadMethods[0]();
+  app.initialize(.96*window.innerHeight, onEndOfHighlightWord, model);
+  document.getElementById("semModelInput").onchange = function()
+  {
+    let ind = parseInt(semGroupModels.indexOf(document.getElementById("semModelInput").value));
+    let model = semGroupLoadMethods[ind]();
+    app.updateWithSemGroupModel(model);
+  };
 
   document.getElementById("wordCloudPreview").append(app.svg.node());
   document.getElementById("wordBarGraph").append(app.graphSvg.node());
@@ -204,5 +223,52 @@ define(['d3', 'app', 'https://sharonchoong.github.io/svg-exportJS/svg-export.min
   function showBarGraph()
   {
     document.getElementById("wordBarGraph").style.display = "block";
+  }
+
+  function getGooglenewsDict()
+  {
+    return getDictFor(googlenews);
+  }
+
+  function getTwitterDict()
+  {
+    return getDictFor(twitter);
+  }
+
+  function getWiki2Dict()
+  {
+    return getDictFor(wiki2);
+  }
+
+  function getGooglenews2Dict()
+  {
+    return googlenews2.getVecs();
+  }
+
+  function getWikiDict()
+  {
+    return getDictFor(wiki);
+  }
+
+  function getGigawordDict()
+  {
+    return getDictFor(englishgigaword);
+  }
+
+  function getBNCDict()
+  {
+    return getDictFor(britishnationalcorpus);
+  }
+
+  function getDictFor(src)
+  {
+    let vecsList = src.split("\n");
+    let vecsDict = {};
+    vecsList.forEach(function(line){
+        let vecs = line.split(" ");
+        let key = vecs.shift();
+        vecsDict[key] = vecs;
+    });
+    return vecsDict;
   }
 })

@@ -20,14 +20,16 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
     stopWordPref : true,
     lightnessPref : true,
     semanticPref : 5,
+    semGroupModel : null,
     colorPref : d3.schemeTableau10,
     rectBoundingPref : false,
     circleBoundingPref : false,
 
-    initialize : function(dimPref, onEndOfHighlightWord)
+    initialize : function(dimPref, onEndOfHighlightWord, semGroupModel)
     {   
       this.dimPref = dimPref;
       this.onEndOfHighlightWord = onEndOfHighlightWord;
+      this.semGroupModel = semGroupModel;
 
       this.svg = d3.create("svg")
         .attr("width", this.dimPref)
@@ -144,6 +146,16 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       this.semanticPref = semanticPref;
       this.initializeWords(this.wordsRaw);
       this.generateCoords(onEndFunction);
+    },
+
+    updateWithSemGroupModel(semGroupModel, onEndFunction)
+    {
+      if(semGroupModel != this.semGroupModel)
+      {
+        this.semGroupModel = semGroupModel;
+        this.initializeWords(this.wordsRaw);
+        this.generateCoords(onEndFunction);
+      }
     },
 
     updateWithRectBoundingPref(rectBoundingPref, onEndFunction)
@@ -272,7 +284,7 @@ define(['d3', 'https://cdn.jsdelivr.net/gh/jasondavies/d3-cloud@master/build/d3.
       cleanWords.forEach((c) => (c.length > 0) ? wordCount++ : null);
       this.wordCount = wordCount;
 
-      this.wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref);
+      this.wordsParsed = parser.parseText(wordsRaw, this.stopWords, this.stopWordPref, this.semanticPref, this.semGroupModel);
       this.words = this.wordsParsed.slice(0, Math.min(this.wordsParsed.length, this.numWordsPref)); //if there are more words in text than user specified, remove the extra
       while(this.words.length>0 && (this.words[this.words.length-1].frequency<=this.minCountPref || (this.words.length<this.wordsParsed.length && this.words[this.words.length-1].frequency === this.wordsParsed[this.words.length].frequency)))
       { //remove words one at a time until there are no cases of a word being in the list while another word with the same frequency is not in the list, and also remove words with frequency less than minfrequency pref

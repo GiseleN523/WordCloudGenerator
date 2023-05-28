@@ -1,10 +1,9 @@
-define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
+define(['kmeans'], function(kmeans) {
    
-    vectsDict = vecs.getVecs();
-    vectsArr = Object.values(vectsDict);
+    //vecsDict = vecs.getVecs();
     k = 4;
 
-    return { parseText: function(textStr, stopWords, stopWordPref, semPref) 
+    return { parseText: function(textStr, stopWords, stopWordPref, semPref, vecsDict) 
         {
             //initial tokenization
             let cleanText = textStr.split('\n').join(' ').split('\r').join(' ') //condense into one split?
@@ -112,8 +111,8 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
                 if (wordsFreq[i].text.toLowerCase() === 'constructor') {
                   console.log(wordsFreq[i]);
                 }
-                if(vectsDict.hasOwnProperty(wordsFreq[i].text.toLowerCase())) {
-                  toCluster.push(vectsDict[wordsFreq[i].text.toLowerCase()])
+                if(vecsDict.hasOwnProperty(wordsFreq[i].text.toLowerCase())) {
+                  toCluster.push(vecsDict[wordsFreq[i].text.toLowerCase()])
                 }
                 else {
                   rareWrds.push(wordsFreq[i].text)
@@ -121,7 +120,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
               }
               
               //make kmeans object using array of words found in wordvecs 
-              groups = kmeans.getKmeans(toCluster, k, function(err, res) {
+              groups = kmeans.getKmeans(toCluster, k, function(err) {
                 if (err) throw new Error(err)
             
                 else {
@@ -132,7 +131,7 @@ define(['wordvecs10000', 'kmeans'], function(vecs, kmeans) {
               
               ind = 0
               wordsFreq.forEach(function(wordObj) {
-                if(wordObj.text.toLowerCase() in vectsDict) {
+                if(wordObj.text.toLowerCase() in vecsDict) {
                   group = indClusts[ind]
                   wordObj.semGroup = group
                   if (typeof group === 'undefined') {

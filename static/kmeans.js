@@ -1,4 +1,4 @@
-//add credit
+//https://github.com/stevemacn/kmeans
 
 // kmeans.js 0.0.1
 

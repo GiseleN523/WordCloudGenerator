@@ -8,16 +8,19 @@
     </div>
     <div id="rightContentColumn">
         <header>
-            <h1>Wordcloudinator</h1>
+            <h1>Word Skies</h1>
+            <h3>A research-based word cloud generator</h3>
         </header>
         <div id="textInputGroup" class="prefGroup">
             <h3>Text Source</h3>
             <div class="prefGroupContent">
                 <br><label id="fileInput"><input type="file" accept=".txt"><span>Select A File</span></label>
                 <button id="downloadSvgButton">Download svg</button>
-                <span id="currentFile"></span>
-                <textarea id="rawTextInput" rows="10" placeholder="Or paste your text here"></textarea>
-                <br><br><span id="wordCount"></span>
+                <span id="currentFile"></span><br>
+                <textarea id="rawTextInput" rows="10" placeholder="Or paste your text here"></textarea><br><br>
+                <label for="">Semantic Grouping Model</label>
+                <select name="semModelInput" id="semModelInput"></select><br><br><br>
+                <span id="wordCount"></span>
             </div>
         </div>
         <form>
@@ -30,7 +33,7 @@
                             <li>This is the highest number of words that can be included in the cloud</li>
                             <li>If there are multiple words with the same frequency, we choose ommitting them all over including some and leaving some out to satisfy the maximum word value</li>
                         </span></span>
-                        <input type="text" id="numWordsPref" value="100">
+                        <input type="text" id="numWordsPref" value="50">
                     </div>
                     <div>
                         <label for="minCountPref">Only Include Words With Word Counts Above</label>
@@ -139,7 +142,7 @@
                                 According to the Gestalt school of psychology, objects that are close together or that are similar are seen as a group 
                             </a></li>
                         </span></span>
-                        <input type="range" id="semanticPref" min="1" max="9" value="5">
+                        <input type="range" id="semanticPref" min="1" max="10" value="5">
                         <span id="semanticLabel">5</span>
                     </div>
                     <div>
