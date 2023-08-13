@@ -1,15 +1,18 @@
-# takes a given vector model (assumes format of Nordic Language Processing Laboratory's models) and formats/saves the top 100,000 words (based on our frequency wordlist) to a .txt file
+# takes a given vector model m (assumes format of Nordic Language Processing Laboratory's models) and reformats/saves the top n words (based on our frequency wordlist) to a .txt file
+# run with python shortenWordList.py m n
+
 
 import sys
 
 readFromName = sys.argv[1]
+numVectors = int(sys.argv[2])
 
 file1 = open("eng_word_freq.csv", "r", encoding='Latin1') # wordlist: https://www.kaggle.com/datasets/wheelercode/english-word-frequency-list
 dict_words = file1.readlines()
 dict_words = dict_words[1:]
 for ind in range(0, len(dict_words)):
     dict_words[ind] = dict_words[ind][:dict_words[ind].index(",")]
-dict_words = dict_words[:100000]
+dict_words = dict_words[:numVectors]
 file1.close()
 
 newname = readFromName[0:readFromName.index(".")]+"_shortened.txt"
