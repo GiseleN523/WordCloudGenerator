@@ -53,7 +53,9 @@ Semantic grouping is done using a combination of [Steve MacNeil's k-means cluste
 * NLPL's Gigaword Word2Vec Model
 * NLPL's British National Corpus Word2Vec Model
 
-We wrote scripts that were used to save only the top 100,000 words (according to [this wordlist](https://www.kaggle.com/datasets/wheelercode/english-word-frequency-list), as some of the vector sets were quite large. Then we could read from these shorter and more consistently formatted files, instead of loading in the entire model. We fed each semantic group to d3-cloud separately to place as if it were its own cloud, and then we placed each small cloud. We used D3’s force simulation to approximately pack the smaller clouds as close together as possible while avoiding collisions. 
+We wrote scripts that were used to save only the top 100,000 words (according to [this wordlist](https://www.kaggle.com/datasets/wheelercode/english-word-frequency-list), as some of the vector sets were quite large. Then we could read from these shorter and more consistently formatted files, instead of loading in the entire model. We fed each semantic group to d3-cloud separately to place as if it were its own cloud, and then we placed each small cloud. We used D3’s force simulation to approximately pack the smaller clouds as close together as possible while avoiding collisions.
+
+Note: Because of the limits on the size of files that can be uploaded to github, the versions of the model files we include here are smaller than 100,000 words, but you can try out the tool using the full models on our website.
 
 ### The Web Interface
 
@@ -61,4 +63,4 @@ We wrote scripts that were used to save only the top 100,000 words (according to
 
 The main logic of our program was written using Javascript, but our website interface was written in HTML and CSS, as well as using Python’s Flask module. Our interface allows for file input and copy/paste raw text input.
 
-Our code is modularized so that our basic word cloud generator functionality can be used on its own without the interface, if a user wanted to, for example, import it into [Observable Notebooks](observablehq.com). In order to import our code into Observable, we had to learn how to make sure it met the Asynchronous Module Definition (AMD) specification, a specific organizational format that is required by Observable. You can see an example of our code being used in Observable [here](https://observablehq.com/d/95aef5d4b44603b7).
+Our code is modularized so that our basic word cloud generator functionality can be used on its own without the interface, if a user wanted to, for example, import it into [Observable Notebooks](observablehq.com). In order to import our code into Observable, we had to learn how to make sure it met the Asynchronous Module Definition (AMD) specification, a specific organizational format that is required by Observable.
